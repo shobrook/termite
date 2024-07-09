@@ -7,13 +7,10 @@ A CLI assistant that responds by generating a UI in your terminal.
 Termite is useful for getting stuff done in your terminal. Things that would normally require multiple bash commands get abstracted away into TUIs.
 
 - "Help me diff these two SQLite tables"
-- "What ports are currently active?"
+- "Show me which ports are currently active"
 - "Make a real-time feed of the messages in my Redis queue"
 
-You can also use it to draft your own terminal applications. Kinda like [v0.dev](https://v0.dev/) for TUIs. 
-
-- "Create a tool that cleans up old branches in a Git repo"
-- "Let me play Wordle in my terminal"
+You can also use it to help bootstrap your own terminal applications. Kinda like [v0.dev](https://v0.dev/) for TUIs.
 
 ## Installation
 
