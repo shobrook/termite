@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import ast
 import platform
 import tempfile
 from pathlib import Path
@@ -59,6 +60,9 @@ def get_package_name(module: str) -> str:
 
 
 def install_package(package: str) -> bool:
+    if package in ["curses"]:  # Standard library
+        return True
+
     python_executable = get_python_executable()
     result = run_cmd(
         [python_executable, "-m", "pip", "install", package],
@@ -99,6 +103,13 @@ def execute_script_with_subprocess(script: Script, suppressed=True) -> Script:
 
 
 def execute_script(script: Script, suppressed=True) -> Script:
+    try:
+        ast.parse(script.code)
+    except SyntaxError as e:
+        script.has_errors = True
+        script.error_message = str(e)
+        return script
+
     install_package(LIBRARY)
 
     retry = True

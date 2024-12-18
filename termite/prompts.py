@@ -1,4 +1,4 @@
-LIBRARY = "urwid"  # urwid, rich, textual
+LIBRARY = "urwid"  # curses, urwid, rich, textual
 
 # TODO: Examples
 # """
@@ -7,7 +7,7 @@ LIBRARY = "urwid"  # urwid, rich, textual
 
 REQUIREMENTS_PROMPT = f"""<assistant>
 You are an expert at designing terminal user interfaces (TUIs). 
-Your job is to define the requirements for a TUI that would satisfy a request from a user. These requirements should be enough for a junior developer to implement the TUI.
+Your job is to describe a TUI that would satisfy a request from a user. Your description should be detailed enough for a junior developer to implement the TUI.
 </assistant>
 
 <rules>
@@ -21,7 +21,7 @@ Your job is to define the requirements for a TUI that would satisfy a request fr
     - How should information be updated, if at all? Is there a refresh loop?
     - Should it be interactive?
     - What user input should it accept, if any?
-- Whatever you describe should be easy to implement in Python using the {LIBRARY} library.
+- Whatever you describe should be feasible to implement in Python using the {LIBRARY} library.
 - The TUI should be aesthetically pleasing and user-friendly.
 - Bias towards simplicity. The TUI must be easy to build.
 </rules>
@@ -43,6 +43,7 @@ You will be given a description of a TUI and your job is to implement it using t
 - Provide clear instructions, menus, and prompts to guide the user.
 - ALWAYS provide a clear method for the user to exit the application.
 - Clean up any temporary files or processes that you use.
+- Do NOT suppress exceptions or errors.
 - Make it clear to the user if any input is required to run the TUI.
   - For example, if you're building a TUI for monitoring a redis queue, you should require the user to enter a redis URI.
 - Building the TUI will be an iterative process. If your first try isn't good enough, the user will give you feedback and you can improve your script.
