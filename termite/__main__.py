@@ -2,10 +2,10 @@
 import argparse
 
 # Local
-# from termite.run_agent import run_agent
+# from termite.run_pipeline import run_pipeline
 # from termite.execute_script import execute_script
 
-from run_agent import run_agent
+from run_pipeline import run_pipeline
 from execute_script import execute_script
 
 
@@ -23,7 +23,8 @@ def main():
     args = parser.parse_args()
 
     # TODO: Loading indicator
-    tui = run_agent(" ".join(args.prompt))
+    print(" ".join(args.prompt))
+    tui = run_pipeline(" ".join(args.prompt))
     if tui.has_errors:
         print("ERROR: Could not generate a TUI.")
         return

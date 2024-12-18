@@ -1,15 +1,14 @@
 # Standard library
-import re
 from typing import Tuple
 
 # Local
 # from termite.run_llm import run_llm
-# from termite.prompts import EVALUATE_PROMPT
 # from termite.execute_script import Script
+# from termite.prompts import EVALUATE_SCRIPT
 
 from run_llm import run_llm
-from prompts import EVALUATE_PROMPT
 from execute_script import Script
+from prompts import EVALUATE_SCRIPT
 
 
 #########
@@ -43,14 +42,12 @@ def parse_evaluation(output: str) -> Tuple[bool, str]:
 ######
 
 
-def evaluate_script(script: Script, requirements: str) -> Script:
+def evaluate_script(script: Script, prompt: str):
     messages = [
         {
             "role": "user",
-            "content": f"# Description\n\n{requirements}\n\n# Implementation\n\n{script.code}\n\n#####\n\nCritique this implementation. Determine whether it is optimally implemented and provide feedback if it is not.",
-        }
+            "content": f"<request>{prompt}</request>\n\n<code>\n{script.code}\n</code>",
+        },
     ]
-    evaluation = run_llm(EVALUATE_PROMPT, messages)
+    evaluation = run_llm(EVALUATE_SCRIPT, messages)
     script.is_correct, script.reflection = parse_evaluation(evaluation)
-
-    return script

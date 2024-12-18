@@ -4,11 +4,11 @@ from typing import Optional
 # Local
 # from termite.run_llm import run_llm
 # from termite.evaluate_script import Script
-# from termite.prompts import REQUIREMENTS_PROMPT, GENERATE_SCRIPT_PROMPT
+# from termite.prompts import GENERATE_SCRIPT, REFINE_SCRIPT
 
 from run_llm import run_llm
 from evaluate_script import Script
-from prompts import REQUIREMENTS_PROMPT, GENERATE_SCRIPT_PROMPT
+from prompts import GENERATE_SCRIPT, REFINE_SCRIPT
 
 
 #########
@@ -17,30 +17,51 @@ from prompts import REQUIREMENTS_PROMPT, GENERATE_SCRIPT_PROMPT
 
 
 def get_evaluation_str(script: Script) -> str:
+    # We handle two "types" of evaluations: compiler errors and self-reflections
+
     evaluation_str = ""
     if script.has_errors:
         if script.error_message and script.error_message.strip():
-            evaluation_str = f"Error:\n{script.error_message}\n\n#####\n\nFix this error and try again."
+            evaluation_str = f"Script is throwing an error:\n{script.error_message}\n\n#####\n\nFix the error. Remember: you CANNOT suppress exceptions."
         else:
-            evaluation_str = "Error:\nThis script has an unknown error.\n\nTry again."
+            evaluation_str = "Script is throwing an error. Identify and fix it. Remember: you CANNOT suppress exceptions."
     elif not script.is_correct:
-        evaluation_str = f"Failed to meet requirements. Feedback:\n{script.reflection}\n\n#####\n\nFix these issues and try again."
+        evaluation_str = script.reflection
 
     return evaluation_str
 
 
-# TODO: Check first for ```python before splitting by ```
 def parse_code(output: str) -> str:
-    chunks = output.split("```")
+    def _parse_tags() -> Optional[str]:
+        chunks = output.split("<code>")
 
-    if len(chunks) == 1:
-        return output
+        if len(chunks) == 1:
+            return None
 
-    script = "```".join(chunks[1:-1]).strip()
-    if script.split("\n")[0].lower().startswith("python"):
-        script = "\n".join(script.split("\n")[1:])
+        code = chunks[1].split("</code>")[0].strip()
+        return code
 
-    return script
+    def _parse_delimiters() -> Optional[str]:
+        # TODO: Split by ```python before splitting by ```
+        chunks = output.split("```")
+
+        if len(chunks) == 1:
+            return None
+
+        # TODO: Do not join all chunks back together –– just get the first chunk after the delimiter
+        code = "```".join(chunks[1:-1]).strip()
+        if code.split("\n")[0].lower().startswith("python"):
+            code = "\n".join(code.split("\n")[1:])
+
+        return code
+
+    if code := _parse_tags():
+        return code
+
+    if code := _parse_delimiters():
+        return code
+
+    return output
 
 
 ######
@@ -48,24 +69,24 @@ def parse_code(output: str) -> str:
 ######
 
 
-def generate_requirements(prompt: str) -> str:
-    """
-    Turns the prompt into a fleshed out requirements document for a TUI.
-    """
-
+def generate_script(prompt: str, last_script: Optional[Script] = None) -> Script:
     messages = [{"role": "user", "content": prompt}]
-    requirements = run_llm(REQUIREMENTS_PROMPT, messages)
-    design = f"<request>{prompt}</request>\n\n<requirements>\n{requirements}\n</requirements>"
-    return design
-
-
-def generate_script(requirements: str, last_script: Optional[Script] = None) -> Script:
-    messages = [{"role": "user", "content": requirements}]
     if last_script:
-        messages.append({"role": "assistant", "content": last_script.code})
-        messages.append({"role": "user", "content": get_evaluation_str(last_script)})
+        messages = [
+            {
+                "role": "user",
+                "content": f"Build a TUI that satisfies the following request:\n{prompt}",
+            },
+            {
+                "role": "assistant",
+                "content": last_script.code,
+            },  # TODO: Try wrapping in <code> tags
+            {"role": "user", "content": get_evaluation_str(last_script)},
+        ]
 
-    code = run_llm(GENERATE_SCRIPT_PROMPT, messages)
+    code = run_llm(
+        REFINE_SCRIPT if last_script else GENERATE_SCRIPT, messages, model="o1-preview"
+    )
     code = parse_code(code)
 
     return Script(code=code)

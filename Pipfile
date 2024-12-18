@@ -9,7 +9,7 @@ urwid = "*"
 anthropic = "*"
 openai = "*"
 ollama = "*"
-psutil = "*"
+pygame = "*"
 
 [dev-packages]
 
