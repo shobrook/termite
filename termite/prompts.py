@@ -73,15 +73,7 @@ Pay special attention to these rules:
 - Exceptions are not allowed to be caught. They must ALWAYS be raised. There should be absolutely NO try/except blocks, or someone will die. 
 - You must ALWAYS return the full Python script for the TUI, not just the changes.
 
-Output your response in this format:
-<code>
-Your IMPROVED and FULLY COMPLETE Python script goes here...
-</code>"""
-
-# - Review the feedback carefully and think step-by-step about how to address each point.
-# <thoughts>
-# Your plan for applying the feedback goes here...
-# </thoughts>
+Respond ONLY with code, and with no markdown formatting."""
 
 RESOLVE_IMPORTS = """You are an expert Python programmer. 
 Your job is to respond with the name of the package on PyPI that corresponds to the given import statement.

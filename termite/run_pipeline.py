@@ -56,7 +56,7 @@ def fix_script(script: Script, prompt: str) -> Script:
 
         print(f"Executed script. Error found:\n{curr_script.error_message}\n")
 
-        curr_script = generate_script(prompt, curr_script)
+        curr_script = generate_script(prompt, curr_script, predictive=True)
         num_retries += 1
 
         print(f"Fixed script:\n{curr_script.code}\n\n")

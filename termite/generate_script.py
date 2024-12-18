@@ -69,7 +69,9 @@ def parse_code(output: str) -> str:
 ######
 
 
-def generate_script(prompt: str, last_script: Optional[Script] = None) -> Script:
+def generate_script(
+    prompt: str, last_script: Optional[Script] = None, predictive: bool = False
+) -> Script:
     messages = [{"role": "user", "content": prompt}]
     if last_script:
         messages = [
@@ -80,13 +82,19 @@ def generate_script(prompt: str, last_script: Optional[Script] = None) -> Script
             {
                 "role": "assistant",
                 "content": last_script.code,
-            },  # TODO: Try wrapping in <code> tags
+            },
             {"role": "user", "content": get_evaluation_str(last_script)},
         ]
 
-    code = run_llm(
-        REFINE_SCRIPT if last_script else GENERATE_SCRIPT, messages, model="o1-preview"
-    )
+    llm_args = {
+        "system": REFINE_SCRIPT if last_script else GENERATE_SCRIPT,
+        "messages": messages,
+        # "model": "o1-preview" if not last_script else "gpt-4o",
+        "prediction": (
+            {"type": "content", "content": last_script.code} if predictive else None
+        ),
+    }
+    code = run_llm(**llm_args)
     code = parse_code(code)
 
     return Script(code=code)
