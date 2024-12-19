@@ -91,7 +91,7 @@ def execute_script_with_subprocess(script: Script, suppressed=True) -> Tuple[boo
         error_message = result.stderr.decode() if result.stderr else ""
         has_errors = (
             result.returncode != 0 and error_message.strip()
-        )  # NOTE: Kinda dumb..
+        )  # TODO: Kinda dumb..
     except TimeoutExpired:
         pass
     finally:

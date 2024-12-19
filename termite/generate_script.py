@@ -1,6 +1,9 @@
 # Standard library
 from typing import Optional
 
+# Third party
+from rich.progress import Progress
+
 # Local
 # from termite.run_llm import run_llm
 # from termite.evaluate_script import Script
@@ -70,7 +73,10 @@ def parse_code(output: str) -> str:
 
 
 def generate_script(
-    prompt: str, last_script: Optional[Script] = None, predictive: bool = False
+    prompt: str,
+    last_script: Optional[Script] = None,
+    predictive: bool = False,
+    update_p_bar: Optional[callable] = None,
 ) -> Script:
     messages = [{"role": "user", "content": prompt}]
     if last_script:
@@ -89,12 +95,21 @@ def generate_script(
     llm_args = {
         "system": REFINE_SCRIPT if last_script else GENERATE_SCRIPT,
         "messages": messages,
-        # "model": "o1-preview" if not last_script else "gpt-4o",
         "prediction": (
             {"type": "content", "content": last_script.code} if predictive else None
         ),
+        "stream": True if update_p_bar else False,
     }
-    code = run_llm(**llm_args)
-    code = parse_code(code)
 
-    return Script(code=code)
+    output = run_llm(**llm_args)
+    code = ""
+    if update_p_bar:
+        for token in output:
+            code += token
+            update_p_bar()
+    else:
+        code = output
+    code = parse_code(code)
+    script = Script(code=code)
+
+    return script

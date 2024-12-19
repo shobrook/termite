@@ -1,11 +1,13 @@
 # Standard library
 import os
-from typing import Dict, List
+from typing import Union, Generator, Dict, List
 
 # Third party
 from ollama import chat
 from openai import OpenAI
 from anthropic import Anthropic
+
+MAX_TOKENS = 8192
 
 
 #########
@@ -28,26 +30,50 @@ def get_llm_provider():
     )
 
 
-def run_openai(system: str, messages: List[Dict[str, str]], **kwargs) -> str:
+def run_openai(
+    system: str, messages: List[Dict[str, str]], **kwargs
+) -> Union[str, Generator[str, None, None]]:
     openai = OpenAI()
+    stream = False if "stream" not in kwargs else kwargs["stream"]
     response = openai.chat.completions.create(
         messages=[{"role": "system", "content": system}, *messages],
         model="gpt-4o" if "model" not in kwargs else kwargs["model"],
         temperature=0.7 if "temperature" not in kwargs else kwargs["temperature"],
+        stream=stream,
+        max_tokens=MAX_TOKENS,
     )
-    return response.choices[0].message.content
+
+    if not stream:
+        return response.choices[0].message.content
+
+    response = (e.choices[0] for e in response)
+    response = (e for e in response if e.finish_reason != "stop" and e.delta.content)
+    response = (e.delta.content for e in response)
+
+    return response
 
 
-def run_anthropic(system: str, messages: List[Dict[str, str]], **kwargs) -> str:
+def run_anthropic(
+    system: str, messages: List[Dict[str, str]], **kwargs
+) -> Union[str, Generator[str, None, None]]:
     anthropic = Anthropic()
+    stream = False if "stream" not in kwargs else kwargs["stream"]
     response = anthropic.messages.create(
         model="claude-3-5-sonnet-20241022",
-        max_tokens=8192,
+        max_tokens=MAX_TOKENS,
         system=system,
         messages=messages,
         temperature=0.7 if "temperature" not in kwargs else kwargs["temperature"],
+        stream=stream,
     )
-    return response.content[0].text
+
+    if not stream:
+        return response.content[0].text
+
+    response = (e for e in response if e.type == "content_block_delta")
+    response = (e.delta.text for e in response)
+
+    return response
 
 
 def run_ollama(system: str, messages: List[Dict[str, str]]) -> str:
@@ -63,7 +89,9 @@ def run_ollama(system: str, messages: List[Dict[str, str]]) -> str:
 ######
 
 
-def run_llm(system: str, messages: List[Dict[str, str]], **kwargs) -> str:
+def run_llm(
+    system: str, messages: List[Dict[str, str]], **kwargs
+) -> Union[str, Generator[str, None, None]]:
     provider = get_llm_provider()
     if provider == "openai":
         return run_openai(system, messages, **kwargs)

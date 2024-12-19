@@ -1,5 +1,7 @@
 # TODO: Move this to a configuration file
-LIBRARY = "urwid"  # curses, urwid, rich, textual, asciimatics
+LIBRARY = "urwid"  # urwid vs. rich
+
+# TODO: Make these prompts shorter. Less instructions.
 
 GENERATE_SCRIPT = f"""You are an expert Python programmer tasked with building a terminal user interface (TUI).
 Your job is to implement a TUI that satisfies the user's request, using the {LIBRARY} library.
