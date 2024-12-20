@@ -8,12 +8,14 @@ from rich.progress import (
 )
 
 # Local
+# from termite.prompts import GENERATE_REQUIREMENTS
 # from termite.run_llm import MAX_TOKENS
 # from termite.generate_script import generate_script
 # from termite.evaluate_script import Script, evaluate_script
 # from termite.execute_script import execute_script
 
-from run_llm import MAX_TOKENS
+from prompts import GENERATE_REQUIREMENTS
+from run_llm import MAX_TOKENS, run_llm
 from generate_script import generate_script
 from evaluate_script import Script, evaluate_script
 from execute_script import execute_script
@@ -38,13 +40,21 @@ def get_progress_bar() -> Progress:
 
 
 def generate_requirements(prompt: str) -> str:
-    # TODO: Implement
     console.log("[bold green]Designing the TUI")
     with get_progress_bar() as p_bar:
         task = p_bar.add_task("requirements", total=MAX_TOKENS // 10)
+
+        messages = [{"role": "user", "content": prompt}]
+        output = run_llm(GENERATE_REQUIREMENTS, messages, stream=True)
+
+        requirements = ""
+        for token in output:
+            requirements += token
+            p_bar.update(task, advance=1)
         p_bar.update(task, completed=MAX_TOKENS // 10)
 
-    return prompt
+        design = f"<request>{prompt}</request>\n\n<requirements>\n{requirements}\n</requirements>"
+        return design
 
 
 def generate_mvp(prompt: str) -> Script:
@@ -116,18 +126,11 @@ def fix_script(script: Script, prompt: str, max_retries: int = 10) -> Script:
 
 
 def termite(prompt: str) -> Script:
-    """
-    1. Generate requirements for the TUI.
-    2. Generate an implementation plan (pseudocode).
-    3. Generate a first draft of the script in Python, using urwid.
-    4. (Optional) Iteratively refine the code using self-reflection.
-    5. Iteratively fix runtime errors.
-    """
-
     requirements = generate_requirements(prompt)
+    print(requirements)
     # plan = generate_pseudocode(requirements)
     script = generate_mvp(requirements)
-    script = refine_script(script, requirements)
+    # script = refine_script(script, requirements)
     script = fix_script(script, requirements)
 
     return script

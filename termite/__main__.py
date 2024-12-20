@@ -80,6 +80,7 @@ def main():
     # "Finished! Your TUI is available in your local Termite library."
     # "Run your TUI? Y/n"
     # - Then clear the screen and run the TUI
+    # - Also give the option to preview the code before running (show it in a TUI :^))
 
     print("[magenta]\nFinished! Starting up your TUI...")
     time.sleep(3)

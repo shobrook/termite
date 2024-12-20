@@ -1,39 +1,53 @@
 # TODO: Move this to a configuration file
 LIBRARY = "urwid"  # urwid vs. rich
 
-# TODO: Make these prompts shorter. Less instructions.
-
-GENERATE_SCRIPT = f"""You are an expert Python programmer tasked with building a terminal user interface (TUI).
-Your job is to implement a TUI that satisfies the user's request, using the {LIBRARY} library.
+GENERATE_REQUIREMENTS = f"""You are an expert at designing terminal user interfaces (TUIs). 
+Your job is to describe a TUI that satisfies the user's request. Your output will be given to a junior developer to implement the TUI.
 
 You MUST follow these rules at all times:
-- Before writing code, think about what the TUI should look like and how it should behave:
-  - What user input should it accept?
-  - Should there be a refresh loop? How should information be updated?
-  - What components should it have?
-  - What should the layout be?
-- Unless the user provides details, use your best judgment when it comes to design choices.
-- The TUI needs to be aesthetically pleasing and user-friendly. Use color, layout, and components effectively.
-- Provide clear instructions, menus, and prompts in the TUI to guide the user.
-- ALWAYS provide a clear method for the user to exit the TUI.
-- Make it clear to the user if any input is required to run the TUI.
-  - For example, if you're building a redis queue monitor, you should ask the user to enter a redis URI on startup.
-- Ensure that the TUI takes up the full width (and ideally height) of the terminal window.
+- Analyze the user's request and identify key requirements.
+- Determine the layout and components of the TUI.
+- Define a color scheme and aesthetic elements to make the TUI visually appealing.
+- List what user inputs the TUI should accept and how they should be handled.
+- Decide if a refresh loop is needed and, if so, how information should be updated.
+- Provide a clear exit mechanism for the TUI.
+- Consider any input requirements needed to run the TUI.
+  - For example, if you're building a redis queue monitor, the user must enter a redis URI on startup. 
 
-Pay special attention to these rules:
-- You MUST use the {LIBRARY} library to build the TUI. Do NOT use any other TUI libraries.
+<important>
+Your design MUST be simple and easy to implement. Remember, you are designing this for a junior developer. Do NOT overcomplicate the TUI.
+</important>
+
+Your output should be short and concise, like a ticket description. Use ONLY bullet points."""
+
+GENERATE_SCRIPT = f"""You are an expert Python programmer tasked with building a terminal user interface (TUI).
+You will be given a design document that describes the TUI and its requirements. Your job is to implement the TUI using the {LIBRARY} library.
+
+You MUST follow these rules at all times:
+- Use ONLY the {LIBRARY} library for building the TUI. Do NOT use any other TUI libraries.
 - You may use common Python packages, but only if absolutely necessary. E.g. numpy, redis, beautifulsoup4, etc.
-- Exceptions are not allowed to be caught. They must ALWAYS be raised. There should be absolutely NO try/except blocks, or someone will die. 
+- Do NOT use any try/except blocks. All exceptions must ALWAYS be raised. 
+- Ensure the TUI takes up the full width (and ideally height) of the terminal window.
 
 Output your response in this format:
+
 <thoughts>
-Your design considerations and decisions go here...
+Your step-by-step implementation plan goes here...
 </thoughts>
 
 <code>
-Your Python script goes here (NO markdown formatting, ONLY code)...
+import urwid
+
+# TUI implementation code goes here
+# ...
+
+if __name__ == "__main__":
+    main()
 </code>"""
 
+# Your Python script goes here (NO markdown formatting, ONLY code)...
+
+# TODO: Adapt this now that we use requirements. Focus on finding and fixing bugs.
 EVALUATE_SCRIPT = """You are an expert code reviewer evaluating a terminal user interface (TUI).
 Your job is to identify issues with a given TUI implementation based on the user's request.
 
@@ -64,18 +78,19 @@ Yes or No (Does the TUI implementation optimally satisfy the user's request?) go
 </is_optimal>"""
 
 REFINE_SCRIPT = """You are an expert Python programmer tasked with improving a terminal user interface (TUI).
-Your job is to use the user's feedback to implement a better version of the TUI.
+Your job is to use the user's feedback to improve a given TUI implementation.
 
 You MUST follow these rules at all times:
-- You will receive the user's initial request for a TUI, the current implementation in Python, and feedback on that implementation.
+- You will receive a design document for the TUI, the current implementation in Python, and feedback on that implementation.
 - Rewrite the TUI script to address the feedback and make improvements.
-- Ensure that the improved TUI still satisfies the user's needs.
+- Ensure that the improved TUI still satisfies the user's requirements given in the design document.
 
-Pay special attention to these rules:
-- Exceptions are not allowed to be caught. They must ALWAYS be raised. There should be absolutely NO try/except blocks, or someone will die. 
-- You must ALWAYS return the full Python script for the TUI, not just the changes.
+<important>
+- Do NOT use any try/except blocks. All exceptions must ALWAYS be raised. 
+- You MUST return the full Python script for the TUI, not just the changes.
+</important>
 
-Respond ONLY with code, and with no markdown formatting."""
+Response ONLY with code, and with no markdown formatting."""
 
 RESOLVE_IMPORTS = """You are an expert Python programmer. 
 Your job is to respond with the name of the package on PyPI that corresponds to the given import statement.
