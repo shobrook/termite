@@ -11,11 +11,12 @@ from dataclasses import dataclass
 from subprocess import TimeoutExpired, DEVNULL, PIPE, run as run_cmd
 
 # Local
-# from termite.run_llm import run_llm
-# from termite.prompts import RESOLVE_IMPORTS
-
-from run_llm import run_llm
-from prompts import RESOLVE_IMPORTS
+try:
+    from termite.run_llm import run_llm
+    from termite.prompts import RESOLVE_IMPORTS
+except ImportError as e:
+    from run_llm import run_llm
+    from prompts import RESOLVE_IMPORTS
 
 
 #########
@@ -28,8 +29,8 @@ class Script:
     code: str
     is_correct: bool = False
     reflection: Optional[str] = None
-    has_errors: Optional[bool] = None
-    error_message: Optional[str] = None
+    stdout: Optional[str] = None
+    stderr: Optional[str] = None
 
 
 def get_python_executable() -> str:
@@ -72,34 +73,78 @@ def install_package(package: str) -> bool:
     return result.returncode == 0
 
 
-def execute_script_with_subprocess(script: Script, suppressed=True) -> Tuple[bool, str]:
-    python_exe = get_python_executable()
+def save_script_to_file(script: Script) -> str:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as temp_file:
         temp_file.write(script.code)
         temp_file_path = temp_file.name
 
-    has_errors = False
-    error_message = ""
+    return temp_file_path
 
+
+def strip_ansi_escape_sequences(data: str) -> str:
+    ansi_escape = re.compile(
+        r"""
+        \x1B
+        (?:
+            [@-Z\\-_]
+        |
+            \[
+            [0-?]*
+            [ -/]*
+            [@-~]
+        |
+            \]
+            (?:
+                [^\x07]*?
+                \x07
+            |
+                [^\x1B]*?
+                \x1B\\
+            )
+        |
+            [PX^_]
+            .*?
+            \x1B\\
+        )
+        """,
+        re.VERBOSE | re.DOTALL,
+    )
+    return ansi_escape.sub("", data)
+
+
+def run_in_pseudo_terminal(script: Script, timeout: int = 5) -> Tuple[str, str]:
+    python_exe = get_python_executable()
+    tui_file = save_script_to_file(script)
+    runner_file = os.path.join(os.path.dirname(__file__), "run_pt.py")
+
+    stdout, stderr = "", ""
     try:
         result = run_cmd(
-            [python_exe, temp_file_path],
-            stdout=DEVNULL if suppressed else None,
-            stderr=PIPE if suppressed else None,
-            timeout=5 if suppressed else None,
+            [
+                python_exe,
+                runner_file,
+                tui_file,
+            ],
+            stdout=DEVNULL,
+            stderr=PIPE,
+            text=True,
+            timeout=timeout,
         )
-        error_message = result.stderr.decode() if result.stderr else ""
-        has_errors = (
-            result.returncode != 0 and error_message.strip()
-        )  # TODO: Kinda dumb..
-    except TimeoutExpired:
-        pass
+        stdout = result.stdout if result.stdout else ""
+        stderr = result.stderr if result.stderr else ""
+    except TimeoutExpired as e:
+        stdout, stderr = "", ""
     finally:
-        # Delete the temporary file
-        if suppressed:
-            os.remove(temp_file_path)
+        os.remove(tui_file)
 
-    return has_errors, error_message
+    stderr = strip_ansi_escape_sequences(stderr)
+    return stdout.strip(), stderr.strip()
+
+
+def run_in_subprocess(script: Script):
+    python_exe = get_python_executable()
+    script_file = save_script_to_file(script)
+    run_cmd([python_exe, script_file])
 
 
 ######
@@ -107,10 +152,12 @@ def execute_script_with_subprocess(script: Script, suppressed=True) -> Tuple[boo
 ######
 
 
-def execute_script(script: Script, suppressed=True):
-    has_errors = False
-    error_message = ""
+def execute_script(script: Script, pseudo=True):
+    if not pseudo:
+        run_in_subprocess(script)
+        return
 
+    stdout, stderr = "", ""
     try:
         # Check for valid syntax before executing
         ast.parse(script.code)
@@ -118,18 +165,16 @@ def execute_script(script: Script, suppressed=True):
         # Execute the script, resolving import errors if any
         retry = True
         while retry:
-            has_errors, error_message = execute_script_with_subprocess(
-                script, suppressed
-            )
+            stdout, stderr = run_in_pseudo_terminal(script)
 
-            if not suppressed:
+            if not pseudo:
                 return
 
             retry = False
-            if has_errors and error_message:
+            if stderr:
                 match = re.search(
                     r"ModuleNotFoundError: No module named '(\w+)'",
-                    error_message,
+                    stderr,
                 )
                 if match:
                     # TODO: Ask user if it's okay to install package to the venv
@@ -138,8 +183,7 @@ def execute_script(script: Script, suppressed=True):
                     if install_package(package):
                         retry = True
     except SyntaxError as e:
-        has_errors = True
-        error_message = str(e)
+        stderr = str(e)
 
-    script.has_errors = has_errors
-    script.error_message = error_message
+    script.stdout = stdout
+    script.stderr = stderr

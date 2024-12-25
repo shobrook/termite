@@ -8,17 +8,18 @@ from rich.progress import (
 )
 
 # Local
-# from termite.prompts import GENERATE_REQUIREMENTS
-# from termite.run_llm import MAX_TOKENS
-# from termite.generate_script import generate_script
-# from termite.evaluate_script import Script, evaluate_script
-# from termite.execute_script import execute_script
-
-from prompts import GENERATE_REQUIREMENTS
-from run_llm import MAX_TOKENS, run_llm
-from generate_script import generate_script
-from evaluate_script import Script, evaluate_script
-from execute_script import execute_script
+try:
+    from termite.prompts import GENERATE_DESIGN
+    from termite.run_llm import MAX_TOKENS, run_llm
+    from termite.generate_script import GenerateScriptAction, generate_script
+    from termite.evaluate_script import Script, evaluate_script
+    from termite.execute_script import execute_script
+except ImportError:
+    from prompts import GENERATE_DESIGN
+    from run_llm import MAX_TOKENS, run_llm
+    from generate_script import GenerateScriptAction, generate_script
+    from evaluate_script import Script, evaluate_script
+    from execute_script import execute_script
 
 console = Console(log_time=False, log_path=False)
 print = console.print
@@ -39,64 +40,39 @@ def get_progress_bar() -> Progress:
     )
 
 
-def generate_requirements(prompt: str) -> str:
+def generate_design(prompt: str) -> str:
     console.log("[bold green]Designing the TUI")
     with get_progress_bar() as p_bar:
-        task = p_bar.add_task("requirements", total=MAX_TOKENS // 10)
+        task = p_bar.add_task("requirements", total=MAX_TOKENS // 12)
 
         messages = [{"role": "user", "content": prompt}]
-        output = run_llm(GENERATE_REQUIREMENTS, messages, stream=True)
+        output = run_llm(GENERATE_DESIGN, messages, stream=True)
 
-        requirements = ""
+        design = ""
         for token in output:
-            requirements += token
+            design += token
             p_bar.update(task, advance=1)
-        p_bar.update(task, completed=MAX_TOKENS // 10)
+        p_bar.update(task, completed=MAX_TOKENS // 12)
 
-        design = f"<request>{prompt}</request>\n\n<requirements>\n{requirements}\n</requirements>"
+        design = f"# Design Document\n\n<user_request>\n{prompt}\n</user_request>\n\n<details>\n{design}\n</details>"
         return design
 
 
-def generate_mvp(prompt: str) -> Script:
-    console.log("[bold green]Building an initial version")
+def generate_tui(plan: str) -> Script:
+    console.log("[bold green]Building the TUI")
     with get_progress_bar() as p_bar:
-        task = p_bar.add_task("initial", total=MAX_TOKENS // 10)
+        task = p_bar.add_task("initial", total=MAX_TOKENS // 12)
         update_p_bar = lambda: p_bar.update(task, advance=1)
 
-        script = generate_script(prompt, update_p_bar=update_p_bar)
+        script = generate_script(plan, update_p_bar=update_p_bar)
 
-        p_bar.update(task, completed=MAX_TOKENS // 10)
+        p_bar.update(task, completed=MAX_TOKENS // 12)
 
     return script
 
 
-# TODO: Include the refine history in the messages
-def refine_script(script: Script, prompt: str, max_iters: int = 3) -> Script:
-    if not max_iters:
-        return script
-
-    console.log("[bold green]Refining implementation")
-    with get_progress_bar() as p_bar:
-        task = p_bar.add_task("refine", total=max_iters)
-
-        num_iters = 0
-        curr_script = script
-        while num_iters < max_iters and not curr_script.is_correct:
-            evaluate_script(curr_script, prompt)
-
-            if curr_script.is_correct:
-                p_bar.update(task, completed=max_iters)
-                return curr_script
-
-            curr_script = generate_script(prompt, curr_script)
-            p_bar.update(task, advance=1)
-            num_iters += 1
-
-        return curr_script
-
-
 # TODO: Include the fix history in the messages
-def fix_script(script: Script, prompt: str, max_retries: int = 10) -> Script:
+def fix_bugs(script: Script, plan: str, max_retries: int = 10) -> Script:
     if not max_retries:
         return script
 
@@ -109,13 +85,44 @@ def fix_script(script: Script, prompt: str, max_retries: int = 10) -> Script:
         while num_retries < max_retries:
             execute_script(curr_script)
 
-            if not curr_script.has_errors:
+            if not curr_script.stderr:
                 p_bar.update(task, completed=max_retries)
                 return curr_script
 
-            curr_script = generate_script(prompt, curr_script, predictive=True)
+            curr_script = generate_script(
+                plan,
+                action=GenerateScriptAction.FIX,
+                last_script=curr_script,
+            )
             p_bar.update(task, advance=1)
             num_retries += 1
+
+        return curr_script
+
+
+# TODO: Include the refine history in the messages
+def refine_tui(script: Script, plan: str, max_iters: int = 3) -> Script:
+    if not max_iters:
+        return script
+
+    console.log("[bold green]Adding finishing touches")
+    with get_progress_bar() as p_bar:
+        task = p_bar.add_task("refine", total=max_iters)
+
+        num_iters = 0
+        curr_script = script
+        while num_iters < max_iters and not curr_script.is_correct:
+            evaluate_script(curr_script, plan)
+
+            if curr_script.is_correct:
+                p_bar.update(task, completed=max_iters)
+                return curr_script
+
+            curr_script = generate_script(
+                plan, action=GenerateScriptAction.REFINE, last_script=curr_script
+            )
+            p_bar.update(task, advance=1)
+            num_iters += 1
 
         return curr_script
 
@@ -126,11 +133,16 @@ def fix_script(script: Script, prompt: str, max_retries: int = 10) -> Script:
 
 
 def termite(prompt: str) -> Script:
-    requirements = generate_requirements(prompt)
-    print(requirements)
-    # plan = generate_pseudocode(requirements)
-    script = generate_mvp(requirements)
-    # script = refine_script(script, requirements)
-    script = fix_script(script, requirements)
+    """
+    1. Generate a design document.
+    2. Implement the TUI.
+    3. Fix any bugs.
+    4. (Optional) Refine the TUI.
+    """
+
+    design = generate_design(prompt)
+    script = generate_tui(design)
+    script = fix_bugs(script, design)
+    # script = refine_tui(script, plan)
 
     return script

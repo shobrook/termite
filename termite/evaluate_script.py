@@ -51,3 +51,11 @@ def evaluate_script(script: Script, prompt: str):
     ]
     evaluation = run_llm(EVALUATE_SCRIPT, messages)
     script.is_correct, script.reflection = parse_evaluation(evaluation)
+
+
+"""
+1. Nothing is painted to the terminal.
+2. Errors are thrown on user input.
+3. Design specifications are not met: content OR styling.
+4. Refresh loop doesn't exist or is failing.
+"""

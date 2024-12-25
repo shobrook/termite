@@ -1,16 +1,18 @@
 # Standard library
 import time
 import argparse
+from pathlib import Path
 
 # Third party
 from rich.console import Console
+from rich.live import Live
 
 # Local
 # from termite.termite import termite
-# from termite.execute_script import execute_script
+# from termite.execute_script import Script, execute_script
 
 from termite import termite
-from execute_script import execute_script
+from execute_script import Script, execute_script
 
 console = Console(log_time=False, log_path=False)
 print = console.print
@@ -46,6 +48,21 @@ def get_prompt(args: argparse.Namespace) -> str:
     return prompt
 
 
+def save_to_library(prompt: str, tui: Script):
+    library_dir = Path.home() / ".termite"
+    if not library_dir.exists():
+        library_dir.mkdir(parents=True)
+
+    timestamp = time.strftime("%Y-%m-%d-%H%M%S")
+    file_name = f"{timestamp}_{prompt[:25].replace(" ", "_")}.py"
+    file_path = library_dir / file_name
+
+    with open(file_path, "w") as file:
+        file.write(tui.code)
+
+    print(f"[bright_black]\nDone! Code saved to: {file_path}[/bright_black]")
+
+
 ######
 # MAIN
 ######
@@ -66,25 +83,25 @@ def main():
 
     prompt = get_prompt(args)
     if not prompt or not prompt.strip():
-        print("[red]Please provide a non-empty prompt.")
+        print("[red]Please provide a non-empty prompt.[/red]")
         return
-
-    # TODO: Save TUI to user's local TUI library
 
     tui = termite(prompt)
-    if tui.has_errors:  # TODO: For some reason this isn't always hit when it should be
-        # TODO: Tell users how to access it if they want to debug
-        print("[red]\nFailed to generate a TUI. Please try again.")
-        return
+    save_to_library(prompt, tui)
 
-    # "Finished! Your TUI is available in your local Termite library."
-    # "Run your TUI? Y/n"
-    # - Then clear the screen and run the TUI
-    # - Also give the option to preview the code before running (show it in a TUI :^))
+    # Animate the ellipsis in the message
+    with Live(console=console, refresh_per_second=4) as live:
+        for i in range(8):
+            dots = "." * (i % 4)
+            live.update(f"[magenta]Opening your TUI{dots}[/magenta]")
+            time.sleep(0.5)
 
-    print("[magenta]\nFinished! Starting up your TUI...")
-    time.sleep(3)
-    execute_script(tui, suppressed=False)
+        if tui.stderr:
+            live.update("")
+            print("[red]\nFailed to open TUI.[/red]")
+            return
+
+    execute_script(tui, pseudo=False)
 
 
 if __name__ == "__main__":

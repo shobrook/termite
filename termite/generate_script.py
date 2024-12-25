@@ -1,17 +1,16 @@
 # Standard library
 from typing import Optional
-
-# Third party
-from rich.progress import Progress
+from enum import Enum
 
 # Local
-# from termite.run_llm import run_llm
-# from termite.evaluate_script import Script
-# from termite.prompts import GENERATE_SCRIPT, REFINE_SCRIPT
-
-from run_llm import run_llm
-from evaluate_script import Script
-from prompts import GENERATE_SCRIPT, REFINE_SCRIPT
+try:
+    from termite.run_llm import run_llm
+    from termite.evaluate_script import Script
+    from termite.prompts import GENERATE_SCRIPT, FIX_SCRIPT, REFINE_SCRIPT
+except ImportError:
+    from run_llm import run_llm
+    from evaluate_script import Script
+    from prompts import GENERATE_SCRIPT, FIX_SCRIPT, REFINE_SCRIPT
 
 
 #########
@@ -19,15 +18,18 @@ from prompts import GENERATE_SCRIPT, REFINE_SCRIPT
 #########
 
 
+class GenerateScriptAction(str, Enum):
+    CREATE = "CREATE"
+    FIX = "FIX"
+    REFINE = "REFINE"
+
+
 def get_evaluation_str(script: Script) -> str:
     # We handle two "types" of evaluations: compiler errors and self-reflections
 
     evaluation_str = ""
-    if script.has_errors:
-        if script.error_message and script.error_message.strip():
-            evaluation_str = f"Script is throwing an error:\n{script.error_message}\n\n#####\n\nFix the error. Remember: you CANNOT suppress exceptions."
-        else:
-            evaluation_str = "Script is throwing an error. Identify and fix it. Remember: you CANNOT suppress exceptions."
+    if script.stderr:
+        evaluation_str = f"Script is throwing an error:\n{script.stderr}\n\n#####\n\nFix the error. Remember: you CANNOT suppress exceptions."
     elif not script.is_correct:
         evaluation_str = script.reflection
 
@@ -74,8 +76,8 @@ def parse_code(output: str) -> str:
 
 def generate_script(
     prompt: str,
+    action: GenerateScriptAction = GenerateScriptAction.CREATE,
     last_script: Optional[Script] = None,
-    predictive: bool = False,
     update_p_bar: Optional[callable] = None,
 ) -> Script:
     messages = [{"role": "user", "content": prompt}]
@@ -92,11 +94,19 @@ def generate_script(
             {"role": "user", "content": get_evaluation_str(last_script)},
         ]
 
+    system = GENERATE_SCRIPT
+    if action == GenerateScriptAction.REFINE:
+        system = REFINE_SCRIPT
+    elif action == GenerateScriptAction.FIX:
+        system = FIX_SCRIPT
+
     llm_args = {
-        "system": REFINE_SCRIPT if last_script else GENERATE_SCRIPT,
+        "system": system,
         "messages": messages,
         "prediction": (
-            {"type": "content", "content": last_script.code} if predictive else None
+            {"type": "content", "content": last_script.code}
+            if action == GenerateScriptAction.FIX
+            else None
         ),
         "stream": True if update_p_bar else False,
     }
@@ -113,3 +123,6 @@ def generate_script(
     script = Script(code=code)
 
     return script
+
+
+# TODO: Self-consitency for generating fixes

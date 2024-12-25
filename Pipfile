@@ -4,12 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-textual = "*"
 urwid = "*"
 anthropic = "*"
 openai = "*"
 ollama = "*"
-pygame = "*"
 
 [dev-packages]
 
