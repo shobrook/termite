@@ -3,46 +3,22 @@ import os
 import pty
 import sys
 import errno
-import platform
-from pathlib import Path
 from select import select
-from subprocess import Popen, DEVNULL, run as run_cmd
+from subprocess import Popen
+
+# Local
+try:
+    from termite.shared.utils.python_exe import get_python_executable
+except ImportError:
+    from python_exe import get_python_executable
 
 
-#########
-# HELPERS
-#########
-
-
-def get_python_executable() -> str:
-    venv_dir = Path.home() / ".termite"
-    if platform.system() == "Windows":
-        executable = venv_dir / "Scripts" / "python"
-    else:
-        executable = venv_dir / "bin" / "python"
-
-    if not venv_dir.exists():
-        run_cmd(
-            [sys.executable, "-m", "venv", str(venv_dir)],
-            stdout=DEVNULL,
-            stderr=DEVNULL,
-            check=True,
-        )
-
-    return str(executable)
-
-
-######
-# MAIN
-######
-
-
-def run_tui_virtually(tui_file: str):
+def run_pty(command: str):
     python_exe = get_python_executable()
 
     masters, slaves = zip(pty.openpty(), pty.openpty())
     with Popen(
-        [python_exe, tui_file],
+        [python_exe, command],
         stdin=slaves[0],
         stdout=slaves[0],
         stderr=slaves[1],
@@ -77,5 +53,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(1)
 
-    tui_file = sys.argv[1]
-    run_tui_virtually(tui_file)
+    command = sys.argv[1]
+    run_pty(command)

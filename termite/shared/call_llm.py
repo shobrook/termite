@@ -7,12 +7,13 @@ from ollama import chat
 from openai import OpenAI
 from anthropic import Anthropic
 
-MAX_TOKENS = 8192
-
 
 #########
 # HELPERS
 #########
+
+
+MAX_TOKENS = 8192
 
 
 def get_llm_provider():
@@ -30,7 +31,7 @@ def get_llm_provider():
     )
 
 
-def run_openai(
+def call_openai(
     system: str, messages: List[Dict[str, str]], **kwargs
 ) -> Union[str, Generator[str, None, None]]:
     openai = OpenAI()
@@ -53,7 +54,7 @@ def run_openai(
     return response
 
 
-def run_anthropic(
+def call_anthropic(
     system: str, messages: List[Dict[str, str]], **kwargs
 ) -> Union[str, Generator[str, None, None]]:
     anthropic = Anthropic()
@@ -76,7 +77,7 @@ def run_anthropic(
     return response
 
 
-def run_ollama(system: str, messages: List[Dict[str, str]]) -> str:
+def call_ollama(system: str, messages: List[Dict[str, str]]) -> str:
     response = chat(
         model=os.getenv("OLLAMA_MODEL", None),
         messages=[{"role": "system", "content": system}, *messages],
@@ -89,13 +90,13 @@ def run_ollama(system: str, messages: List[Dict[str, str]]) -> str:
 ######
 
 
-def run_llm(
+def call_llm(
     system: str, messages: List[Dict[str, str]], **kwargs
 ) -> Union[str, Generator[str, None, None]]:
     provider = get_llm_provider()
     if provider == "openai":
-        return run_openai(system, messages, **kwargs)
+        return call_openai(system, messages, **kwargs)
     elif provider == "anthropic":
-        return run_anthropic(system, messages, **kwargs)
+        return call_anthropic(system, messages, **kwargs)
     elif provider == "ollama":
-        return run_ollama(system, messages)
+        return call_ollama(system, messages)

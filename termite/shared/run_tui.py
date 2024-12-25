@@ -1,76 +1,24 @@
 # Standard library
 import os
 import re
-import sys
 import ast
-import platform
 import tempfile
-from pathlib import Path
-from typing import Optional, Tuple
-from dataclasses import dataclass
+from typing import Tuple
 from subprocess import TimeoutExpired, DEVNULL, PIPE, run as run_cmd
+
 
 # Local
 try:
-    from termite.run_llm import run_llm
-    from termite.prompts import RESOLVE_IMPORTS
+    from termite.dtos import Script
+    from termite.shared.utils import fix_any_import_errors, get_python_executable
 except ImportError as e:
-    from run_llm import run_llm
-    from prompts import RESOLVE_IMPORTS
+    from dtos import Script
+    from shared.utils import fix_any_import_errors, get_python_executable
 
 
 #########
 # HELPERS
 #########
-
-
-@dataclass
-class Script:
-    code: str
-    is_correct: bool = False
-    reflection: Optional[str] = None
-    stdout: Optional[str] = None
-    stderr: Optional[str] = None
-
-
-def get_python_executable() -> str:
-    venv_dir = Path.home() / ".termite"
-    if platform.system() == "Windows":
-        executable = venv_dir / "Scripts" / "python"
-    else:
-        executable = venv_dir / "bin" / "python"
-
-    if not venv_dir.exists():
-        run_cmd(
-            [sys.executable, "-m", "venv", str(venv_dir)],
-            stdout=DEVNULL,
-            stderr=DEVNULL,
-            check=True,
-        )
-
-    return str(executable)
-
-
-def get_package_name(module: str) -> str:
-    return run_llm(
-        RESOLVE_IMPORTS,
-        [{"role": "user", "content": f"import {module}"}],
-        model="gpt-4o-mini",
-        temperature=0.1,
-    )
-
-
-def install_package(package: str) -> bool:
-    if package in ["curses"]:  # Standard library
-        return True
-
-    python_executable = get_python_executable()
-    result = run_cmd(
-        [python_executable, "-m", "pip", "install", package],
-        capture_output=True,
-        check=True,
-    )
-    return result.returncode == 0
 
 
 def save_script_to_file(script: Script) -> str:
@@ -115,7 +63,7 @@ def strip_ansi_escape_sequences(data: str) -> str:
 def run_in_pseudo_terminal(script: Script, timeout: int = 5) -> Tuple[str, str]:
     python_exe = get_python_executable()
     tui_file = save_script_to_file(script)
-    runner_file = os.path.join(os.path.dirname(__file__), "run_pt.py")
+    runner_file = os.path.join(os.path.dirname(__file__), "utils", "run_pty.py")
 
     stdout, stderr = "", ""
     try:
@@ -132,7 +80,7 @@ def run_in_pseudo_terminal(script: Script, timeout: int = 5) -> Tuple[str, str]:
         )
         stdout = result.stdout if result.stdout else ""
         stderr = result.stderr if result.stderr else ""
-    except TimeoutExpired as e:
+    except TimeoutExpired:
         stdout, stderr = "", ""
     finally:
         os.remove(tui_file)
@@ -152,7 +100,7 @@ def run_in_subprocess(script: Script):
 ######
 
 
-def execute_script(script: Script, pseudo=True):
+def run_tui(script: Script, pseudo=True):
     if not pseudo:
         run_in_subprocess(script)
         return
@@ -162,26 +110,11 @@ def execute_script(script: Script, pseudo=True):
         # Check for valid syntax before executing
         ast.parse(script.code)
 
-        # Execute the script, resolving import errors if any
+        # Execute the script, iteratively fixing any import errors
         retry = True
         while retry:
             stdout, stderr = run_in_pseudo_terminal(script)
-
-            if not pseudo:
-                return
-
-            retry = False
-            if stderr:
-                match = re.search(
-                    r"ModuleNotFoundError: No module named '(\w+)'",
-                    stderr,
-                )
-                if match:
-                    # TODO: Ask user if it's okay to install package to the venv
-                    module = match.group(1)
-                    package = get_package_name(module)
-                    if install_package(package):
-                        retry = True
+            retry = fix_any_import_errors(stderr)
     except SyntaxError as e:
         stderr = str(e)
 

@@ -8,11 +8,14 @@ from rich.console import Console
 from rich.live import Live
 
 # Local
-# from termite.termite import termite
-# from termite.execute_script import Script, execute_script
-
-from termite import termite
-from execute_script import Script, execute_script
+try:
+    from termite.dtos import Script
+    from termite.shared import run_tui
+    from termite.termite import termite
+except ImportError:
+    from dtos import Script
+    from shared import run_tui
+    from termite import termite
 
 console = Console(log_time=False, log_path=False)
 print = console.print
@@ -101,7 +104,7 @@ def main():
             print("[red]\nFailed to open TUI.[/red]")
             return
 
-    execute_script(tui, pseudo=False)
+    run_tui(tui, pseudo=False)
 
 
 if __name__ == "__main__":
