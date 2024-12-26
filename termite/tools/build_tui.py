@@ -6,10 +6,10 @@ from rich.progress import Progress
 
 # Local
 try:
-    from termite.dtos import Script
+    from termite.dtos import Script, Config
     from termite.shared import call_llm, MAX_TOKENS
 except ImportError:
-    from dtos import Script
+    from dtos import Script, Config
     from shared import call_llm, MAX_TOKENS
 
 
@@ -86,11 +86,11 @@ def parse_code(output: str) -> str:
 ######
 
 
-def build_tui(design: str, p_bar: Progress) -> Script:
+def build_tui(design: str, p_bar: Progress, config: Config) -> Script:
     task = p_bar.add_task("build", total=PROGRESS_LIMIT)
 
     output = call_llm(
-        system=PROMPT.format(library="urwid"),
+        system=PROMPT.format(library=config.library),
         messages=[{"role": "user", "content": design}],
         stream=True,
     )

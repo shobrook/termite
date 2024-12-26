@@ -9,10 +9,10 @@ from rich.progress import (
 
 # Local
 try:
-    from termite.dtos import Script
+    from termite.dtos import Script, Config
     from termite.tools import design_tui, build_tui, fix_errors, refine
 except ImportError:
-    from dtos import Script
+    from dtos import Script, Config
     from tools import design_tui, build_tui, fix_errors, refine
 
 console = Console(log_time=False, log_path=False)
@@ -38,7 +38,7 @@ def get_progress_bar() -> Progress:
 ######
 
 
-def termite(prompt: str) -> Script:
+def termite(prompt: str, config: Config) -> Script:
     """
     1. Generate a design document.
     2. Implement the TUI.
@@ -48,15 +48,15 @@ def termite(prompt: str) -> Script:
 
     console.log("[bold green]Designing the TUI")
     with get_progress_bar() as p_bar:
-        design = design_tui(prompt, p_bar)
+        design = design_tui(prompt, p_bar, config)
 
     console.log("[bold green]Building the TUI")
     with get_progress_bar() as p_bar:
-        script = build_tui(design, p_bar)
+        script = build_tui(design, p_bar, config)
 
     console.log("[bold green]Fixing bugs")
     with get_progress_bar() as p_bar:
-        script = fix_errors(script, design, p_bar)
+        script = fix_errors(script, design, p_bar, config)
 
     # if refine:
     #     console.log("[bold green]Adding finishing touches")

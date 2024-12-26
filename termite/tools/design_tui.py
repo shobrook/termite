@@ -3,13 +3,17 @@ from rich.progress import Progress
 
 # Local
 try:
+    from termite.dtos import Config
     from termite.shared import call_llm, MAX_TOKENS
 except ImportError:
+    from dtos import Config
     from shared import call_llm, MAX_TOKENS
+
 
 #########
 # HELPERS
 #########
+
 
 PROGRESS_LIMIT = MAX_TOKENS // 12
 PROMPT = """You are an expert in designing terminal user interfaces (TUIs). Your task is to write a design document for a TUI that satisfies the user's request.
@@ -68,11 +72,11 @@ Remember, your design should satisfy the user's request while maintaining EXTREM
 
 
 # TODO: Pass in `config` to get the library
-def design_tui(prompt: str, p_bar: Progress) -> str:
+def design_tui(prompt: str, p_bar: Progress, config: Config) -> str:
     task = p_bar.add_task("design", total=PROGRESS_LIMIT)
 
     messages = [{"role": "user", "content": prompt}]
-    output = call_llm(PROMPT.format(library="urwid"), messages, stream=True)
+    output = call_llm(PROMPT.format(library=config.library), messages, stream=True)
 
     design = ""
     for token in output:

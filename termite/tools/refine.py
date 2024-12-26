@@ -3,10 +3,10 @@ from rich.progress import Progress
 
 # Local
 try:
-    from termite.dtos import Script
+    from termite.dtos import Script, Config
     from termite.shared import call_llm, MAX_TOKENS
 except ImportError:
-    from dtos import Script
+    from dtos import Script, Config
     from shared import call_llm, MAX_TOKENS
 
 
@@ -62,12 +62,12 @@ You MUST follow these rules at all times:
 Response ONLY with code, and with no markdown formatting."""
 
 
-def refine(script: Script, design: str, p_bar: Progress, max_iters: int = 3) -> Script:
-    task = p_bar.add_task("refine", total=max_iters * (MAX_TOKENS // 12))
+def refine(script: Script, design: str, p_bar: Progress, config: Config) -> Script:
+    task = p_bar.add_task("refine", total=config.refine_iters * (MAX_TOKENS // 12))
 
     num_iters = 0
     curr_script = script
-    while num_iters < max_iters:
+    while num_iters < config.refine_iters:
         pass
 
 

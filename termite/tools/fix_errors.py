@@ -4,10 +4,10 @@ from rich.progress import Progress
 # Local
 
 try:
-    from termite.dtos import Script
+    from termite.dtos import Script, Config
     from termite.shared import run_tui, call_llm, MAX_TOKENS
 except ImportError:
-    from dtos import Script
+    from dtos import Script, Config
     from shared import run_tui, call_llm, MAX_TOKENS
 
 
@@ -52,16 +52,14 @@ def parse_code(output: str) -> str:
 ######
 
 
-def fix_errors(
-    script: Script, design: str, p_bar: Progress, max_retries: int = 10
-) -> Script:
+def fix_errors(script: Script, design: str, p_bar: Progress, config: Config) -> Script:
     # TODO: Use count_tokens(script.code) instead of MAX_TOKENS // 12
-    progress_limit = max_retries * (MAX_TOKENS // 12)
+    progress_limit = config.fix_iters * (MAX_TOKENS // 12)
     task = p_bar.add_task("fix", total=progress_limit)
 
     num_retries = 0
     curr_script = script
-    while num_retries < max_retries:
+    while num_retries < config.fix_iters:
         run_tui(curr_script)
 
         if not curr_script.stderr:
