@@ -52,18 +52,16 @@ def parse_code(output: str) -> str:
 ######
 
 
-def fix_errors(script: Script, design: str, p_bar: Progress, config: Config) -> Script:
-    # TODO: Use count_tokens(script.code) instead of MAX_TOKENS // 12
-    progress_limit = config.fix_iters * (MAX_TOKENS // 12)
-    task = p_bar.add_task("fix", total=progress_limit)
-
+def fix_errors(
+    script: Script, design: str, incr_p_bar: callable, config: Config
+) -> Script:
     num_retries = 0
     curr_script = script
     while num_retries < config.fix_iters:
         run_tui(curr_script)
 
         if not curr_script.stderr:
-            p_bar.update(task, completed=progress_limit)
+            # p_bar.update(task, completed=progress_limit)
             return curr_script
 
         messages = [
@@ -71,7 +69,7 @@ def fix_errors(script: Script, design: str, p_bar: Progress, config: Config) -> 
             {"role": "assistant", "content": curr_script.code},
             {
                 "role": "user",
-                "content": f"<error>\n{curr_script.stderr}\n</error>\n\nFix the error above. Remember: you CANNOT suppress exceptions.",
+                "content": f"<error>\n{curr_script.stderr}\n</error>\n\nFix the error above. Remember: do NOT suppress exceptions.",
             },
         ]
         output = call_llm(
@@ -83,14 +81,14 @@ def fix_errors(script: Script, design: str, p_bar: Progress, config: Config) -> 
         code = ""
         for token in output:
             code += token
-            p_bar.update(task, advance=1)
+            # p_bar.update(task, advance=1)
+            incr_p_bar()
         code = parse_code(code)
         curr_script = Script(code=code)
 
-        p_bar.update(task, advance=1)
         num_retries += 1
 
-    p_bar.update(task, completed=progress_limit)
+    # p_bar.update(task, completed=progress_limit)
     return curr_script
 
 

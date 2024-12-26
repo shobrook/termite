@@ -9,9 +9,11 @@ from rich.progress import (
 
 # Local
 try:
+    from termite.shared import MAX_TOKENS
     from termite.dtos import Script, Config
     from termite.tools import design_tui, build_tui, fix_errors, refine
 except ImportError:
+    from shared import MAX_TOKENS
     from dtos import Script, Config
     from tools import design_tui, build_tui, fix_errors, refine
 
@@ -33,6 +35,43 @@ def get_progress_bar() -> Progress:
     )
 
 
+def _design_tui(prompt: str, config: Config) -> str:
+    console.log("[bold green]Designing the TUI")
+    with get_progress_bar() as p_bar:
+        design = design_tui(prompt, p_bar, config)
+        return design
+
+
+def _build_tui(design: str, config: Config) -> Script:
+    console.log("[bold green]Building the TUI")
+    with get_progress_bar() as p_bar:
+        script = build_tui(design, p_bar, config)
+        return script
+
+
+def _fix_errors(script: Script, design: str, config: Config) -> Script:
+    console.log("[bold green]Fixing bugs")
+    with get_progress_bar() as p_bar:
+        # TODO: Use count_tokens(script.code) instead of MAX_TOKENS // 12
+        progress_limit = config.fix_iters * (MAX_TOKENS // 12)
+        task = p_bar.add_task("fix", total=progress_limit)
+        incr_p_bar = lambda: p_bar.update(task, advance=1)
+        script = fix_errors(script, design, incr_p_bar, config)
+        p_bar.update(task, completed=progress_limit)
+
+        return script
+
+
+def _refine(script: Script, design: str, config: Config) -> Script:
+    if not config.should_refine:
+        return script
+
+    console.log("[bold green]Finishing touches")
+    with get_progress_bar() as p_bar:
+        script = refine(script, design, p_bar, config)
+        return script
+
+
 ######
 # MAIN
 ######
@@ -46,25 +85,9 @@ def termite(prompt: str, config: Config) -> Script:
     4. (Optional) Refine the TUI.
     """
 
-    console.log("[bold green]Designing the TUI")
-    with get_progress_bar() as p_bar:
-        design = design_tui(prompt, p_bar, config)
-
-    console.log("[bold green]Building the TUI")
-    with get_progress_bar() as p_bar:
-        script = build_tui(design, p_bar, config)
-
-    console.log("[bold green]Fixing bugs")
-    with get_progress_bar() as p_bar:
-        script = fix_errors(script, design, p_bar, config)
-
-    # if refine:
-    #     console.log("[bold green]Adding finishing touches")
-    #     with get_progress_bar() as p_bar:
-    #         script = refine(script, design, p_bar)
+    design = _design_tui(prompt, config)
+    script = _build_tui(design, config)
+    script = _fix_errors(script, design, config)
+    script = _refine(script, design, config)
 
     return script
-
-
-# TODO: Try capturing TUI screen as an image
-# TODO: Allow for a config file

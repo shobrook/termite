@@ -4,8 +4,8 @@ import argparse
 from pathlib import Path
 
 # Third party
-from rich.console import Console
 from rich.live import Live
+from rich.console import Console
 
 # Local
 try:
@@ -28,9 +28,9 @@ input = console.input
 
 
 def print_banner():
-    # print("[bold white]╔╦╗┌─┐┬─┐┌┬┐┬┌┬┐┌─┐")
-    # print("[bold white] ║ ├┤ ├┬┘││││ │ ├┤")
-    # print("[bold white] ╩ └─┘┴└─┴ ┴┴ ┴ └─┘")
+    # print("[white]╔╦╗┌─┐┬─┐┌┬┐┬┌┬┐┌─┐")
+    # print("[white] ║ ├┤ ├┬┘││││ │ ├┤")
+    # print("[white] ╩ └─┘┴└─┴ ┴┴ ┴ └─┘")
     print("[white]▗▄▄▄▖▗▄▄▄▖▗▄▄▖ ▗▖  ▗▖▗▄▄▄▖▗▄▄▄▖▗▄▄▄▖")
     print("[white]  █  ▐▌   ▐▌ ▐▌▐▛▚▞▜▌  █    █  ▐▌   ")
     print("[white]  █  ▐▛▀▀▘▐▛▀▚▖▐▌  ▐▌  █    █  ▐▛▀▀▘")
@@ -64,6 +64,19 @@ def save_to_library(prompt: str, tui: Script):
         file.write(tui.code)
 
     print(f"[bright_black]\nDone! Code saved to: {file_path}[/bright_black]")
+
+
+def print_loader(tui: Script):
+    with Live(console=console, refresh_per_second=4) as live:
+        for i in range(8):
+            dots = "." * (i % 4)
+            live.update(f"[magenta]Opening your TUI{dots}[/magenta]")
+            time.sleep(0.5)
+
+        if tui.stderr:
+            live.update("")
+            print("[red]\nFailed to open TUI.[/red]")
+            return
 
 
 ######
@@ -123,20 +136,10 @@ def main():
 
     tui = termite(prompt, config)
     save_to_library(prompt, tui)
+    print_loader(tui)
 
-    # Animate the ellipsis in the message
-    with Live(console=console, refresh_per_second=4) as live:
-        for i in range(8):
-            dots = "." * (i % 4)
-            live.update(f"[magenta]Opening your TUI{dots}[/magenta]")
-            time.sleep(0.5)
-
-        if tui.stderr:
-            live.update("")
-            print("[red]\nFailed to open TUI.[/red]")
-            return
-
-    run_tui(tui, pseudo=False)
+    if not tui.stderr:
+        run_tui(tui, pseudo=False)
 
 
 if __name__ == "__main__":

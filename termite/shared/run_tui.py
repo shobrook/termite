@@ -2,6 +2,7 @@
 import os
 import re
 import ast
+import time
 import tempfile
 from typing import Tuple
 from subprocess import TimeoutExpired, DEVNULL, PIPE, run as run_cmd
@@ -78,6 +79,7 @@ def run_in_pseudo_terminal(script: Script, timeout: int = 5) -> Tuple[str, str]:
             text=True,
             timeout=timeout,
         )
+        time.sleep(3)
         stdout = result.stdout if result.stdout else ""
         stderr = result.stderr if result.stderr else ""
     except TimeoutExpired:
