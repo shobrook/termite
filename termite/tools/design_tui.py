@@ -15,7 +15,7 @@ except ImportError:
 #########
 
 
-PROGRESS_LIMIT = MAX_TOKENS // 12
+PROGRESS_LIMIT = MAX_TOKENS // 15
 PROMPT = """You are an expert in designing terminal user interfaces (TUIs). Your task is to write a design document for a TUI that satisfies the user's request.
 
 Your design will be implemented by a junior developer using the {library} library, so it's crucial to keep it SIMPLE and EASY TO UNDERSTAND.
@@ -71,7 +71,6 @@ Remember, your design should satisfy the user's request while maintaining EXTREM
 ######
 
 
-# TODO: Pass in `config` to get the library
 def design_tui(prompt: str, p_bar: Progress, config: Config) -> str:
     task = p_bar.add_task("design", total=PROGRESS_LIMIT)
 

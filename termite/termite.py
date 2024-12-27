@@ -52,8 +52,8 @@ def _build_tui(design: str, config: Config) -> Script:
 def _fix_errors(script: Script, design: str, config: Config) -> Script:
     console.log("[bold green]Fixing bugs")
     with get_progress_bar() as p_bar:
-        # TODO: Use count_tokens(script.code) instead of MAX_TOKENS // 12
-        progress_limit = config.fix_iters * (MAX_TOKENS // 12)
+        # TODO: Use count_tokens(script.code) instead of MAX_TOKENS // 15
+        progress_limit = config.fix_iters * (MAX_TOKENS // 15)
         task = p_bar.add_task("fix", total=progress_limit)
         incr_p_bar = lambda: p_bar.update(task, advance=1)
         script = fix_errors(script, design, incr_p_bar, config)

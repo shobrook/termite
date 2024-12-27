@@ -53,6 +53,7 @@ The top issues you identified and how you place to address them...
 <code>
 Your full Python script for the improved TUI (ONLY code, and with no markdown formatting)...
 </code>"""
+# TODO: Optimize this prompt
 
 
 def parse_code(output: str) -> str:
@@ -71,7 +72,6 @@ def parse_code(output: str) -> str:
         if len(chunks) == 1:
             return None
 
-        # TODO: Do not join all chunks back together –– just get the first chunk after the delimiter
         code = "```".join(chunks[1:-1]).strip()
         if code.split("\n")[0].lower().startswith("python"):
             code = "\n".join(code.split("\n")[1:])

@@ -18,7 +18,7 @@ except ImportError:
 #########
 
 
-PROGRESS_LIMIT = MAX_TOKENS // 12
+PROGRESS_LIMIT = MAX_TOKENS // 15
 PROMPT = """You are an expert Python programmer tasked with building a terminal user interface (TUI).
 You will be given a design document that describes the TUI and its requirements. Your job is to implement the TUI using the {library} library.
 
@@ -65,7 +65,6 @@ def parse_code(output: str) -> str:
         if len(chunks) == 1:
             return None
 
-        # TODO: Do not join all chunks back together –– just get the first chunk after the delimiter
         code = "```".join(chunks[1:-1]).strip()
         if code.split("\n")[0].lower().startswith("python"):
             code = "\n".join(code.split("\n")[1:])

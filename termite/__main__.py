@@ -100,7 +100,7 @@ def main():
         type=str,
         required=False,
         default="urwid",
-        help="The library to use for implementing the TUI (urwid, rich, curses).",
+        help="The library to use for implementing the TUI (urwid, rich, curses, textual).",
     )
     parser.add_argument(
         "--refine",
@@ -111,7 +111,7 @@ def main():
         "--refine-iters",
         required=False,
         type=int,
-        default=3,
+        default=1,
         help="Number of refinement iterations to perform.",
     )
     parser.add_argument(

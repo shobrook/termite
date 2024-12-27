@@ -39,7 +39,6 @@ def parse_code(output: str) -> str:
     if len(chunks) == 1:
         return output
 
-    # TODO: Do not join all chunks back together –– just get the first chunk after the delimiter
     code = "```".join(chunks[1:-1]).strip()
     if code.split("\n")[0].lower().startswith("python"):
         code = "\n".join(code.split("\n")[1:])
