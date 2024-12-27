@@ -1,5 +1,5 @@
 # Standard library
-from typing import Optional
+from typing import Dict, List, Optional
 
 # Third party
 from rich.progress import Progress
@@ -88,30 +88,28 @@ def parse_code(output: str) -> str:
 
 
 def improve_tui(
-    script: Script, design: str, incr_p_bar: callable, config: Config
+    messages: List[Dict[str, str]],
+    incr_p_bar: callable,
+    config: Config,
 ) -> Script:
-    messages = [
-        # {
-        #     "role": "user",
-        #     "content": f"<tui_design>\n{design}\n</tui_design>\n\n<code>\n{script.code}\n</code>",
-        # },
-        {"role": "user", "content": design},
-        {"role": "assistant", "content": script.code},
+    messages.append(
         {
             "role": "user",
             "content": "Reflect on your implementation and make a better one.",
-        },
-    ]
-    output = call_llm(
+        }
+    )
+    output_iter = call_llm(
         system=PROMPT.format(library=config.library),
         messages=messages,
         stream=True,
     )
-    code = ""
-    for token in output:
-        code += token
+    output = ""
+    for token in output_iter:
+        output += token
         incr_p_bar()
-    code = parse_code(code)
+
+    messages.append({"role": "assistant", "content": output})
+    code = parse_code(output)
 
     return Script(code=code)
 
@@ -121,18 +119,21 @@ def improve_tui(
 ######
 
 
-# TODO: Include the refine history in the messages
 def refine(script: Script, design: str, p_bar: Progress, config: Config) -> Script:
     progress_limit = config.refine_iters * (
-        (MAX_TOKENS // 12) + (config.fix_iters * (MAX_TOKENS // 12))
+        (MAX_TOKENS // 15) + (config.fix_iters * (MAX_TOKENS // 15))
     )
     task = p_bar.add_task("refine", total=progress_limit)
 
     num_iters = 0
     curr_script = script
+    messages = [
+        {"role": "user", "content": design},
+        {"role": "assistant", "content": script.code},
+    ]
     while num_iters < config.refine_iters:
         incr_p_bar = lambda: p_bar.update(task, advance=1)
-        curr_script = improve_tui(curr_script, design, incr_p_bar, config)
+        curr_script = improve_tui(messages, incr_p_bar, config)
         curr_script = fix_errors(curr_script, design, incr_p_bar, config)
 
         num_iters += 1
