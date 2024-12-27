@@ -61,7 +61,6 @@ def fix_errors(
         run_tui(curr_script)
 
         if not curr_script.stderr:
-            # p_bar.update(task, completed=progress_limit)
             return curr_script
 
         messages = [
@@ -81,17 +80,13 @@ def fix_errors(
         code = ""
         for token in output:
             code += token
-            # p_bar.update(task, advance=1)
             incr_p_bar()
         code = parse_code(code)
         curr_script = Script(code=code)
 
         num_retries += 1
 
-    # p_bar.update(task, completed=progress_limit)
     return curr_script
 
 
-# TODO: More granular progress
-# TODO: Include the fix history in the messages
 # TODO: Use self-consistency
