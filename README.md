@@ -6,7 +6,7 @@
 
 <!--Termite lets you quickly prototype a terminal app to help solve a problem. It works well for tasks like:-->
 
-Termite (<span style="color: green;"><b>TERM</b></span>inal <span style="color: green;"><b>I</b></span>nterfaces from <span style="color: green;"><b>T</b></span>ext <span style="color: green;"><b>E</b></span>xpressions) lets you quickly prototype a TUI to solve a problem. It works well for tasks like:
+Termite lets you quickly prototype a TUI to solve a problem. It works well for tasks like:
 
 - "Show me which ports are active"
 - "Make me a throughput monitor for my Redis queue"
