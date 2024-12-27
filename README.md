@@ -13,7 +13,7 @@ Termite lets you quickly prototype a TUI to solve a problem. It works well for t
 - "Help me manage my Docker containers"
 - "Diff these two SQL tables"
 
-It works by generating and auto-executing a Python script that implements the TUI. By default, Termite builds with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
+Under the hood, Termite is using an LLM to generate and auto-execute a Python script that implements the TUI. By default, TUIs are built with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
 
 Please use with caution. Termite is still experimental and carries the obvious risks of executing AI-generated code.
 
@@ -53,7 +53,7 @@ You'll be asked to describe what you want to build. Do this, and then Termite wi
 3. Iteratively fix runtime errors, if any exist.
 4. (Optional) Iteratively refine the code based on self-reflections.
 
-Once finished, your TUI will be saved to the `~/.termite` directory, and automatically started up for you to use.
+Once finished, your TUI will be saved to the `~/.termite` directory and automatically started up for you to use.
 
 ### Advanced Usage
 
