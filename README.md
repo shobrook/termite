@@ -6,16 +6,16 @@
 
 <!--Termite lets you quickly prototype a terminal app to help solve a problem. It works well for tasks like:-->
 
-Termite lets you quickly prototype a TUI to solve a problem. It works well for tasks like:
+Termite lets you quickly prototype a terminal app to solve a problem. It works well for tasks like:
 
 - "Show me which ports are active"
 - "Make me a throughput monitor for my Redis queue"
 - "Help me manage my Docker containers"
 - "Diff these two SQL tables"
 
-Under the hood, Termite is using an LLM to generate and auto-execute a Python script that implements the TUI. By default, TUIs are built with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
+Under the hood, an LLM is generating and auto-executing a Python script that implements the UI. By default, UIs are built with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
 
-Please use with caution. Termite is still experimental and carries the obvious risks of executing AI-generated code.
+Please use with caution. Termite is still very experimental and poses obvious risks by executing AI-generated code.
 
 ## Installation
 

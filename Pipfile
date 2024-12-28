@@ -8,6 +8,8 @@ urwid = "*"
 anthropic = "*"
 openai = "*"
 ollama = "*"
+textual = "*"
+rich = "*"
 
 [dev-packages]
 
