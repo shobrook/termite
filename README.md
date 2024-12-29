@@ -4,8 +4,6 @@
 
 ![Demo](assets/demo.gif)
 
-<!--Termite lets you quickly prototype a terminal app to help solve a problem. It works well for tasks like:-->
-
 Termite lets you quickly prototype a terminal app to solve a problem. It works well for tasks like:
 
 - "Show me which ports are active"
@@ -15,7 +13,7 @@ Termite lets you quickly prototype a terminal app to solve a problem. It works w
 
 Under the hood, an LLM is generating and auto-executing a Python script that implements the UI. By default, UIs are built with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
 
-Please use with caution. Termite is still very experimental and poses obvious risks by executing AI-generated code.
+Please use with caution. Termite is still very experimental and it's obviously risky to run AI-generated code.
 
 ## Installation
 
@@ -51,7 +49,7 @@ You'll be asked to describe what you want to build. Do this, and then Termite wi
 1. Generate a design document based on your prompt.
 2. Implement a TUI in Python.
 3. Iteratively fix runtime errors, if any exist.
-4. (Optional) Iteratively refine the code based on self-reflections.
+4. (Optional) Iteratively refine the TUI based on self-reflections.
 
 Once finished, your TUI will be saved to the `~/.termite` directory and automatically started up for you to use.
 
