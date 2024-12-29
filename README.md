@@ -11,7 +11,7 @@ Termite lets you quickly prototype a terminal app to solve a problem. It works w
 - "Help me manage my Docker containers"
 - "Diff these two SQL tables"
 
-Under the hood, an LLM is generating and auto-executing a Python script that implements the UI. By default, UIs are built with the [urwid](https://urwid.org/) library, but you can also choose from [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), and [textual](https://textual.textualize.io/).
+Under the hood, an LLM is generating and auto-executing a Python script that implements the UI. By default, UIs are built with the [urwid](https://urwid.org/) library, but you can also use [rich](https://rich.readthedocs.io/en/latest/), [curses](https://docs.python.org/3/library/curses.html), or [textual](https://textual.textualize.io/).
 
 Please use with caution. Termite is still very experimental and it's obviously risky to run AI-generated code.
 
