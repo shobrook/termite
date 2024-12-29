@@ -1,6 +1,6 @@
 # 🐛 Termite
 
-**Generate terminal UIs with simple text prompts.**
+Generate terminal UIs (TUIs) with simple text prompts.
 
 ![Demo](assets/demo.gif)
 
@@ -47,7 +47,7 @@ To use, run the following:
 You'll be asked to describe what you want to build. Do this, and then Termite will execute the following steps:
 
 1. Generate a design document based on your prompt.
-2. Implement a TUI in Python.
+2. Implement the TUI in Python.
 3. Iteratively fix runtime errors, if any exist.
 4. (Optional) Iteratively refine the TUI based on self-reflections.
 
