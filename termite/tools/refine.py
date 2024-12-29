@@ -20,13 +20,6 @@ except ImportError:
 #########
 
 
-# """
-# 1. Nothing is painted to the terminal.
-# 2. Errors are thrown on user input.
-# 3. Design specifications are not met: content OR styling.
-# 4. Refresh loop doesn't exist or is failing.
-# """
-
 PROMPT = """You are an expert Python programmer tasked with improving a terminal user interface (TUI).
 Your job is to identify issues with a given TUI implementation and rewrite it to address those issues.
 

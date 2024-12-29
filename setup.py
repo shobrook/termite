@@ -11,7 +11,7 @@ if sys.version_info[:3] < (3, 0, 0):
 
 setup(
     name="termite-ai",
-    version="1.0.0",
+    version="1.0.1",
     description="Generate terminal UIs from simple text prompts",
     url="https://github.com/shobrook/termite",
     author="shobrook",
@@ -26,7 +26,7 @@ setup(
     keywords="openai claude cli commandline tui terminal generative-ui",
     include_package_data=True,
     packages=find_packages(),
-    entry_points={"console_scripts": ["termite = termite.termite:main"]},
+    entry_points={"console_scripts": ["termite = termite.__main__:main"]},
     install_requires=["openai", "anthropic", "ollama", "urwid", "rich", "textual"],
     requires=["openai", "anthropic", "ollama", "urwid", "rich", "textual"],
     python_requires=">=3",

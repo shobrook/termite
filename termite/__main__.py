@@ -35,7 +35,7 @@ def print_banner():
     print("[white]  █  ▐▌   ▐▌ ▐▌▐▛▚▞▜▌  █    █  ▐▌   ")
     print("[white]  █  ▐▛▀▀▘▐▛▀▚▖▐▌  ▐▌  █    █  ▐▛▀▀▘")
     print("[white]  █  ▐▙▄▄▖▐▌ ▐▌▐▌  ▐▌▗▄█▄▖  █  ▐▙▄▄▖")
-    print("[bold white]\ntermite v1.0.0")
+    print("[bold white]\ntermite v1.0.1")
     print("What do you want to make? (Ctrl-C to exit)")
 
 
