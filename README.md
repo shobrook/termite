@@ -1,6 +1,6 @@
 # 🐛 Termite
 
-**Generate terminal UIs with simple text prompts.**
+Generate terminal UIs with simple text prompts.
 
 ![Demo](assets/demo.gif)
 
