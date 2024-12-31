@@ -27,8 +27,15 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     entry_points={"console_scripts": ["termite = termite.__main__:main"]},
-    install_requires=["openai", "anthropic", "ollama", "urwid", "rich", "textual"],
-    requires=["openai", "anthropic", "ollama", "urwid", "rich", "textual"],
+    install_requires=[
+        "openai",
+        "anthropic",
+        "ollama",
+        "urwid",
+        "rich",
+        "textual",
+        "g4f[all]>=0.4.0.0",
+    ],
     python_requires=">=3",
     license="Apache License",
 )
