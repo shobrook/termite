@@ -20,15 +20,15 @@ MAX_TOKENS = 8192
 def get_llm_provider():
     if os.getenv("OPENAI_API_KEY", None):  # Default
         return "openai"
-    elif os.getenv("ANTHROPIC_API_KEY", None):
+    if os.getenv("ANTHROPIC_API_KEY", None):
         return "anthropic"
-    elif os.getenv("OLLAMA_MODEL", None):
+    if os.getenv("OLLAMA_MODEL", None):
         return "ollama"
-    elif os.getenv("G4F", None):
+    if os.getenv("G4F", None):
         return "g4f"
 
     raise ValueError(
-        "No API key found for OpenAI or Anthropic. No Ollama model found either."
+        "No API key found for OpenAI or Anthropic. No Ollama model found either. Gpt4free is not enabled either."
     )
 
 
