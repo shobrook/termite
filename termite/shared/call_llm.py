@@ -6,6 +6,7 @@ from typing import Union, Generator, Dict, List
 from ollama import chat
 from openai import OpenAI
 from anthropic import Anthropic
+from g4f.client import Client
 
 
 #########
@@ -19,12 +20,12 @@ MAX_TOKENS = 8192
 def get_llm_provider():
     if os.getenv("OPENAI_API_KEY", None):  # Default
         return "openai"
-
-    if os.getenv("ANTHROPIC_API_KEY", None):
+    elif os.getenv("ANTHROPIC_API_KEY", None):
         return "anthropic"
-
-    if os.getenv("OLLAMA_MODEL", None):
+    elif os.getenv("OLLAMA_MODEL", None):
         return "ollama"
+    elif os.getenv("G4F", None):
+        return "g4f"
 
     raise ValueError(
         "No API key found for OpenAI or Anthropic. No Ollama model found either."
@@ -85,6 +86,15 @@ def call_ollama(system: str, messages: List[Dict[str, str]]) -> str:
     return response.message.content
 
 
+def call_g4f(system: str, messages: List[Dict[str, str]]) -> str:
+    client = Client()
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system}, *messages],
+    )
+    return response.choices[0].message.content
+
+
 ######
 # MAIN
 ######
@@ -98,5 +108,7 @@ def call_llm(
         return call_openai(system, messages, **kwargs)
     elif provider == "anthropic":
         return call_anthropic(system, messages, **kwargs)
+    elif provider == "g4f":
+        return call_g4f(system, messages)
     elif provider == "ollama":
         return call_ollama(system, messages)
