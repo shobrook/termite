@@ -1,4 +1,5 @@
 # Standard library
+import os
 import time
 import argparse
 from pathlib import Path
@@ -35,7 +36,7 @@ def print_banner():
     print("[white]  █  ▐▌   ▐▌ ▐▌▐▛▚▞▜▌  █    █  ▐▌   ")
     print("[white]  █  ▐▛▀▀▘▐▛▀▚▖▐▌  ▐▌  █    █  ▐▛▀▀▘")
     print("[white]  █  ▐▙▄▄▖▐▌ ▐▌▐▌  ▐▌▗▄█▄▖  █  ▐▙▄▄▖")
-    print("[bold white]\ntermite v1.0.1")
+    print("[bold white]\ntermite v1.0.4")
     print("What do you want to make? (Ctrl-C to exit)")
 
 
@@ -52,7 +53,12 @@ def get_prompt(args: argparse.Namespace) -> str:
 
 
 def save_to_library(prompt: str, tui: Script):
-    library_dir = Path.home() / ".termite"
+    config_home = os.getenv("XDG_CONFIG_HOME", None)
+    if config_home:
+        library_dir = Path(config_home) / "termite"
+    else:
+        library_dir = Path.home() / ".termite"
+
     if not library_dir.exists():
         library_dir.mkdir(parents=True)
 

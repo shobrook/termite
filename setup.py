@@ -11,7 +11,7 @@ if sys.version_info[:3] < (3, 0, 0):
 
 setup(
     name="termite-ai",
-    version="1.0.3",
+    version="1.0.4",
     description="Generate terminal UIs from simple text prompts",
     url="https://github.com/shobrook/termite",
     author="shobrook",
