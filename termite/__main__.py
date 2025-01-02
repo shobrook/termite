@@ -57,7 +57,7 @@ def save_to_library(prompt: str, tui: Script):
         library_dir.mkdir(parents=True)
 
     timestamp = time.strftime("%Y-%m-%d-%H%M%S")
-    file_name = f"{timestamp}_{prompt[:25].replace(" ", "_")}.py"
+    file_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}.py"
     file_path = library_dir / file_name
 
     with open(file_path, "w") as file:
