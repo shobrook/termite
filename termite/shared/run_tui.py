@@ -116,9 +116,16 @@ def run_tui(script: Script, pseudo=True):
         retry = True
         while retry:
             stdout, stderr = run_in_pseudo_terminal(script)
-            retry = fix_any_import_errors(stderr)
+            try:
+                retry = fix_any_import_errors(stderr)
+            except ImportError as e:
+                retry = False
+                stderr = str(e)
     except SyntaxError as e:
         stderr = str(e)
 
     script.stdout = stdout
     script.stderr = stderr
+
+
+# TODO: The PTY process is not being killed

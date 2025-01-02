@@ -1,6 +1,6 @@
 # Standard library
 import re
-from subprocess import run as run_cmd
+from subprocess import CalledProcessError, run as run_cmd
 
 
 # Local
@@ -62,14 +62,19 @@ def install_package(package: str) -> bool:
 
 
 def fix_any_import_errors(stderr: str) -> bool:
-    match = re.search(
-        r"ModuleNotFoundError: No module named '(\w+)'",
-        stderr,
-    )
-    if not match:
-        return False
+    package = ""
+    try:
+        match = re.search(
+            r"ModuleNotFoundError: No module named '(\w+)'",
+            stderr,
+        )
+        if not match:
+            return False
 
-    # TODO: Ask user if it's okay to install package to the venv
-    module = match.group(1)
-    package = get_package_name(module)
-    return install_package(package)
+        # TODO: Ask user if it's okay to install package to the venv
+
+        module = match.group(1)
+        package = get_package_name(module)
+        return install_package(package)
+    except CalledProcessError:
+        raise ImportError(f"Failed to install package: {package}. Use a different one.")
