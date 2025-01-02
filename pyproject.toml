@@ -1,0 +1,43 @@
+[project]
+name = "termite-ai"
+version = "0.1.0"
+description = "Generative UI in your terminal."
+requires-python = ">=3.13"
+dependencies = [
+    "urwid",
+    "anthropic",
+    "openai",
+    "ollama",
+    "textual",
+    "rich",
+    "g4f[all]>=0.4.0.0",
+]
+readme = "README.md"
+license = { text = "Apache License" }
+
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[tool.pdm.dev-dependencies]
+dev = []
+
+[project.scripts]
+termite = "termite.__main__:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+distribution = true
+
+[tool.pyright]
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportAny = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+reportExplicitAny = false
+reportCallInDefaultInitializer = false
