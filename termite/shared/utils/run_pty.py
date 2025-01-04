@@ -1,12 +1,10 @@
-# Standard library
 import os
 import pty
 import sys
 import errno
-from select import select
-from subprocess import Popen
+from select import select, error as SelectError
+from subprocess import Popen, TimeoutExpired
 
-# Local
 try:
     from termite.shared.utils.python_exe import get_python_executable
 except ImportError:
@@ -15,43 +13,65 @@ except ImportError:
 
 def run_pty(command: str):
     python_exe = get_python_executable()
-
     masters, slaves = zip(pty.openpty(), pty.openpty())
-    with Popen(
+    proc = Popen(
         [python_exe, command],
         stdin=slaves[0],
         stdout=slaves[0],
         stderr=slaves[1],
-    ):
+    )
+
+    try:
         for fd in slaves:
-            os.close(fd)  # no input
+            os.close(fd)
 
         readable = {
             masters[0]: sys.stdout.buffer,
             masters[1]: sys.stderr.buffer,
         }
-        while readable:
-            for fd in select(readable, [], [])[0]:
+
+        # Keep reading until EOF from both stdout/stderr or the process ends
+        while True:
+            if not readable:
+                break
+
+            try:
+                rlist, _, _ = select(readable, [], [])
+            except SelectError:
+                break
+
+            for fd in rlist:
                 try:
-                    data = os.read(fd, 1024)  # read available
+                    data = os.read(fd, 1024)
                 except OSError as e:
                     if e.errno != errno.EIO:
-                        raise  # XXX cleanup
-                    del readable[fd]  # EIO means EOF on some systems
+                        raise
+                    del readable[fd]
                 else:
-                    if not data:  # EOF
+                    if not data:
                         del readable[fd]
                     else:
                         readable[fd].write(data)
                         readable[fd].flush()
 
-    for fd in masters:
-        os.close(fd)
+    finally:
+        # Once we've finished reading or an error occurred, close the child process.
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=2)
+            except TimeoutExpired:
+                proc.kill()
+
+        for fd in masters:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(1)
-
     command = sys.argv[1]
     run_pty(command)
