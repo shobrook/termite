@@ -51,25 +51,49 @@ def get_prompt(args: argparse.Namespace) -> str:
 
     return prompt
 
+def get_tool_name(prompt: str, args: argparse.Namespace) -> str:
+    timestamp = time.strftime("%Y-%m-%d-%H%M%S")
+    default_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}"
 
-def save_to_library(prompt: str, tui: Script):
+    print("[cyan]What would you like to name your tool?[/cyan]")
+    print(f"[bright_black]Default: '{default_name}'[/bright_black]")
+    tool_name = input("[cyan]>[/cyan] ").strip()
+
+    # If the user didn't provide a name, just use a timestamp + prompt
+    if len(tool_name) == 0:
+        tool_name = default_name
+
+    return tool_name
+
+def get_library_home() -> Path:
     config_home = os.getenv("XDG_CONFIG_HOME", None)
     if config_home:
         library_dir = Path(config_home) / "termite"
     else:
         library_dir = Path.home() / ".termite"
 
-    if not library_dir.exists():
-        library_dir.mkdir(parents=True)
+    library_dir.mkdir(parents=True, exist_ok=True)
 
-    timestamp = time.strftime("%Y-%m-%d-%H%M%S")
-    file_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}.py"
-    file_path = library_dir / file_name
+    return library_dir
+
+def save_to_library(tui: Script, tool_name: str) -> Script:
+    library_dir = get_library_home()
+    file_path = library_dir / f"{tool_name}.py"
 
     with open(file_path, "w") as file:
         file.write(tui.code)
 
     print(f"[bright_black]\nDone! Code saved to: {file_path}[/bright_black]")
+
+def load_script(name: str) -> Script:
+    library_dir = get_library_home()
+    file_path = library_dir / f"{name}.py"
+
+    if not file_path.exists():
+        print(f"[red]Error: No tool found with name '{name}'.[/red]")
+        raise SystemExit
+
+    return Script(code=file_path.read_text())
 
 
 def print_loader(tui: Script):
@@ -127,6 +151,12 @@ def main():
         default=10,
         help="Max. # of iterations to fix errors.",
     )
+    parser.add_argument(
+        "--run-tool",
+        type=str,
+        default=None,
+        help="Run a previously generated TUI. Use --name when creating a TUI to name it.",
+    )
     args = parser.parse_args()
     config = Config(
         library=args.library,
@@ -135,13 +165,20 @@ def main():
         fix_iters=args.fix_iters,
     )
 
+    if args.run_tool is not None:
+        tui = load_script(args.run_tool)
+        print_loader(tui)
+        run_tui(tui, pseudo=False)
+        return
+
     prompt = get_prompt(args)
     if not prompt or not prompt.strip():
         print("[red]Please provide a non-empty prompt.[/red]")
         return
 
     tui = termite(prompt, config)
-    save_to_library(prompt, tui)
+    tool_name = get_tool_name(prompt, args)
+    save_to_library(tui, tool_name)
     print_loader(tui)
 
     if not tui.stderr:
