@@ -51,6 +51,20 @@ def get_prompt(args: argparse.Namespace) -> str:
 
     return prompt
 
+def get_tool_name(prompt: str, args: argparse.Namespace) -> str:
+    timestamp = time.strftime("%Y-%m-%d-%H%M%S")
+    default_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}"
+
+    print("[cyan]What would you like to name your tool?[/cyan]")
+    print(f"[bright_black]Default: '{default_name}'[/bright_black]")
+    tool_name = input("[cyan]>[/cyan] ").strip()
+
+    # If the user didn't provide a name, just use a timestamp + prompt
+    if len(tool_name) == 0:
+        tool_name = default_name
+
+    return tool_name
+
 def get_library_home() -> Path:
     config_home = os.getenv("XDG_CONFIG_HOME", None)
     if config_home:
@@ -58,21 +72,13 @@ def get_library_home() -> Path:
     else:
         library_dir = Path.home() / ".termite"
 
-    if not library_dir.exists():
-        library_dir.mkdir(parents=True)
+    library_dir.mkdir(parents=True, exist_ok=True)
 
     return library_dir
 
-def save_to_library(prompt: str, tui: Script, name: str | None = None) -> Script:
+def save_to_library(tui: Script, tool_name: str) -> Script:
     library_dir = get_library_home()
-
-    if name is None:
-        timestamp = time.strftime("%Y-%m-%d-%H%M%S")
-        file_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}.py"
-    else:
-        file_name = f"{name}.py"
-
-    file_path = library_dir / file_name
+    file_path = library_dir / f"{tool_name}.py"
 
     with open(file_path, "w") as file:
         file.write(tui.code)
@@ -151,13 +157,6 @@ def main():
         default=None,
         help="Run a previously generated TUI. Use --name when creating a TUI to name it.",
     )
-    parser.add_argument(
-        "--name-tool",
-        type=str,
-        required=False,
-        default=None,
-        help="The name of the tool you are creating, or have previously created.",
-    )
     args = parser.parse_args()
     config = Config(
         library=args.library,
@@ -178,7 +177,8 @@ def main():
         return
 
     tui = termite(prompt, config)
-    save_to_library(prompt, tui, name=args.name_tool)
+    tool_name = get_tool_name(prompt, args)
+    save_to_library(tui, tool_name)
     print_loader(tui)
 
     if not tui.stderr:
