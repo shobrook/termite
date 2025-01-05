@@ -51,8 +51,7 @@ def get_prompt(args: argparse.Namespace) -> str:
 
     return prompt
 
-
-def save_to_library(prompt: str, tui: Script):
+def get_library_home() -> Path:
     config_home = os.getenv("XDG_CONFIG_HOME", None)
     if config_home:
         library_dir = Path(config_home) / "termite"
@@ -62,14 +61,33 @@ def save_to_library(prompt: str, tui: Script):
     if not library_dir.exists():
         library_dir.mkdir(parents=True)
 
-    timestamp = time.strftime("%Y-%m-%d-%H%M%S")
-    file_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}.py"
+    return library_dir
+
+def save_to_library(prompt: str, tui: Script, name: str | None = None) -> Script:
+    library_dir = get_library_home()
+
+    if name is None:
+        timestamp = time.strftime("%Y-%m-%d-%H%M%S")
+        file_name = f"{timestamp}_{prompt[:25].replace(' ', '_')}.py"
+    else:
+        file_name = f"{name}.py"
+
     file_path = library_dir / file_name
 
     with open(file_path, "w") as file:
         file.write(tui.code)
 
     print(f"[bright_black]\nDone! Code saved to: {file_path}[/bright_black]")
+
+def load_script(name: str) -> Script:
+    library_dir = get_library_home()
+    file_path = library_dir / f"{name}.py"
+
+    if not file_path.exists():
+        print(f"[red]Error: No tool found with name '{name}'.[/red]")
+        raise SystemExit
+
+    return Script(code=file_path.read_text())
 
 
 def print_loader(tui: Script):
@@ -127,6 +145,19 @@ def main():
         default=10,
         help="Max. # of iterations to fix errors.",
     )
+    parser.add_argument(
+        "--run-tool",
+        type=str,
+        default=None,
+        help="Run a previously generated TUI. Use --name when creating a TUI to name it.",
+    )
+    parser.add_argument(
+        "--name-tool",
+        type=str,
+        required=False,
+        default=None,
+        help="The name of the tool you are creating, or have previously created.",
+    )
     args = parser.parse_args()
     config = Config(
         library=args.library,
@@ -135,13 +166,19 @@ def main():
         fix_iters=args.fix_iters,
     )
 
+    if args.run_tool is not None:
+        tui = load_script(args.run_tool)
+        print_loader(tui)
+        run_tui(tui, pseudo=False)
+        return
+
     prompt = get_prompt(args)
     if not prompt or not prompt.strip():
         print("[red]Please provide a non-empty prompt.[/red]")
         return
 
     tui = termite(prompt, config)
-    save_to_library(prompt, tui)
+    save_to_library(prompt, tui, name=args.name_tool)
     print_loader(tui)
 
     if not tui.stderr:
