@@ -36,7 +36,7 @@ def print_banner():
     print("[white]  █  ▐▌   ▐▌ ▐▌▐▛▚▞▜▌  █    █  ▐▌   ")
     print("[white]  █  ▐▛▀▀▘▐▛▀▚▖▐▌  ▐▌  █    █  ▐▛▀▀▘")
     print("[white]  █  ▐▙▄▄▖▐▌ ▐▌▐▌  ▐▌▗▄█▄▖  █  ▐▙▄▄▖")
-    print("[bold white]\ntermite v1.0.4")
+    print("[bold white]\ntermite v1.0.5")
     print("What do you want to make? (Ctrl-C to exit)")
 
 
@@ -50,6 +50,7 @@ def get_prompt(args: argparse.Namespace) -> str:
         print("")
 
     return prompt
+
 
 def get_tool_name(prompt: str, args: argparse.Namespace) -> str:
     timestamp = time.strftime("%Y-%m-%d-%H%M%S")
@@ -65,6 +66,7 @@ def get_tool_name(prompt: str, args: argparse.Namespace) -> str:
 
     return tool_name
 
+
 def get_library_home() -> Path:
     config_home = os.getenv("XDG_CONFIG_HOME", None)
     if config_home:
@@ -76,6 +78,7 @@ def get_library_home() -> Path:
 
     return library_dir
 
+
 def save_to_library(tui: Script, tool_name: str) -> Script:
     library_dir = get_library_home()
     file_path = library_dir / f"{tool_name}.py"
@@ -84,6 +87,7 @@ def save_to_library(tui: Script, tool_name: str) -> Script:
         file.write(tui.code)
 
     print(f"[bright_black]\nDone! Code saved to: {file_path}[/bright_black]")
+
 
 def load_script(name: str) -> Script:
     library_dir = get_library_home()
