@@ -21,11 +21,12 @@ Please use with caution. Termite is still very experimental and it's obviously r
 > pipx install termite-ai
 ```
 
-Once installed, you can use OpenAI or Anthropic as your LLM provider. Just add the appropriate API key to your environment:
+Once installed, you can use OpenAI, Anthropic, or gpt4free as your LLM provider. Just add the appropriate API key to your environment:
 
 ```bash
 > export OPENAI_API_KEY="..." # For GPT
 > export ANTHROPIC_API_KEY="..." # For Claude
+> export G4F='true' # For gpt4free
 ```
 
 If you're using OpenAI, you can also set your API URL by adding the following to your environment:
