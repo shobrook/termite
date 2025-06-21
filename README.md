@@ -21,20 +21,61 @@ Please use with caution. Termite is still very experimental and it's obviously r
 > pipx install termite-ai
 ```
 
-Once installed, you can use OpenAI or Anthropic as your LLM provider. Just add the appropriate API key to your environment:
+Once installed, Termite uses [LiteLLM](https://litellm.ai/) to connect to a wide range of LLM providers (100+). You need to set the appropriate environment variables for your chosen provider.
+
+**Common Environment Variables:**
 
 ```bash
-> export OPENAI_API_KEY="..." # For GPT
-> export ANTHROPIC_API_KEY="..." # For Claude
+# For OpenAI Models (e.g., GPT-4o, GPT-3.5-turbo)
+> export OPENAI_API_KEY="..."
+# Optionally, for custom OpenAI-compatible endpoints:
+> export OPENAI_BASE_URL="..." # Defaults to None
+
+# For Anthropic Models (e.g., Claude 3.5 Sonnet, Claude 3 Opus)
+> export ANTHROPIC_API_KEY="..."
+
+# For Google Gemini Models (e.g., Gemini Pro)
+> export GEMINI_API_KEY="..."
+
+# For Ollama (Locally Hosted Models like Llama 3)
+> export OLLAMA_MODEL="llama3" # Specify the Ollama model tag
+# Ensure your Ollama server is running and accessible. LiteLLM will typically connect to http://localhost:11434.
+# For custom Ollama API base, set: OLLAMA_API_BASE_URL="http://custom.host:port"
+
+# For other providers (Azure, Bedrock, Cohere, etc.):
+# Please refer to the LiteLLM documentation for the required environment variables.
+# https://docs.litellm.ai/docs/providers
 ```
 
-If you're using OpenAI, you can also set your API URL by adding the following to your environment:
+**Specifying a Model:**
 
+Termite determines which LLM model to use based on the following, in order of priority:
+
+1.  **`LITELLM_MODEL` Environment Variable (Recommended for clarity):**
+    You can explicitly set the model string that LiteLLM should use. This is the most direct way to specify a model, especially for providers not covered by the common variables above.
+    ```bash
+    > export LITELLM_MODEL="azure/your-deployment-name" # Example for Azure
+    > export LITELLM_MODEL="bedrock/anthropic.claude-3-sonnet-20240229-v1:0" # Example for Bedrock
+    > export LITELLM_MODEL="groq/llama3-70b-8192" # Example for Groq
+    ```
+
+2.  **Inference from Common API Keys (if `LITELLM_MODEL` is not set):**
+    *   If `OPENAI_API_KEY` is set: Defaults to `gpt-4o`.
+    *   If `ANTHROPIC_API_KEY` is set (and OpenAI key is not): Defaults to `claude-3-5-sonnet-20240620`.
+    *   If `GEMINI_API_KEY` is set (and OpenAI/Anthropic keys are not): Defaults to `gemini/gemini-pro`.
+
+3.  **`OLLAMA_MODEL` Environment Variable (if `LITELLM_MODEL` and other API keys are not set):**
+    *   If `OLLAMA_MODEL` is set (e.g., `export OLLAMA_MODEL="llama3"`): Termite will use `ollama/your_ollama_model_name` (e.g., `ollama/llama3`).
+
+**Example:**
+If you have `OPENAI_API_KEY` set but want to use a specific Cohere model, you should set:
 ```bash
-> export OPENAI_BASE_URL="..." # Default to None
+> export COHERE_API_KEY="..."
+> export LITELLM_MODEL="cohere/command-r-plus"
 ```
+If `LITELLM_MODEL` was not set in the above example, Termite would default to using an OpenAI model because `OPENAI_API_KEY` is also present.
 
-For the best results, use Anthropic. For faster and cheaper results, use OpenAI.
+For detailed provider configurations and a full list of supported models, please consult the [LiteLLM documentation](https://docs.litellm.ai/docs/providers).
 
 ## Usage
 

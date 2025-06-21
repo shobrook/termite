@@ -10,6 +10,8 @@ openai = "*"
 ollama = "*"
 textual = "*"
 rich = "*"
+google-generativeai = "*"
+litellm = "*"
 
 [dev-packages]
 
